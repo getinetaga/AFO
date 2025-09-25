@@ -66,7 +66,46 @@ enum MessageType {
   voiceNote,
 }
 
-/// Enhanced ChatMessage model with encryption and advanced features
+}
+
+/// Message edit history model
+class MessageEditHistory {
+  final String messageId;
+  final String originalContent;
+  final String currentContent;
+  final DateTime editedAt;
+  final int editCount;
+
+  MessageEditHistory({
+    required this.messageId,
+    required this.originalContent,
+    required this.currentContent,
+    required this.editedAt,
+    required this.editCount,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'messageId': messageId,
+      'originalContent': originalContent,
+      'currentContent': currentContent,
+      'editedAt': editedAt.millisecondsSinceEpoch,
+      'editCount': editCount,
+    };
+  }
+
+  factory MessageEditHistory.fromJson(Map<String, dynamic> json) {
+    return MessageEditHistory(
+      messageId: json['messageId'],
+      originalContent: json['originalContent'],
+      currentContent: json['currentContent'],
+      editedAt: DateTime.fromMillisecondsSinceEpoch(json['editedAt']),
+      editCount: json['editCount'] ?? 1,
+    );
+  }
+}
+
+/// Enhanced ChatService with advanced messaging features
 class ChatMessage {
   final String id;
   final String senderId;
@@ -1291,6 +1330,240 @@ class ChatService {
         'carol': 0,
       },
     );
+  }
+
+  /**
+   * Edit Message
+   * 
+   * Allows users to edit their own messages within a time limit.
+   * Updates the message content and marks it as edited.
+   */
+  Future<bool> editMessage({
+    required String messageId,
+    required String chatRoomId,
+    required String newContent,
+  }) async {
+    if (_currentUserId == null) {
+      throw Exception("User not authenticated");
+    }
+
+    final messages = _messages[chatRoomId];
+    if (messages == null) return false;
+
+    final messageIndex = messages.indexWhere((m) => m.id == messageId);
+    if (messageIndex == -1) return false;
+
+    final message = messages[messageIndex];
+
+    // Validate permissions
+    if (message.senderId != _currentUserId) {
+      throw Exception("You can only edit your own messages");
+    }
+
+    // Check time limit (15 minutes for editing)
+    final timeSinceMessage = DateTime.now().difference(message.timestamp);
+    if (timeSinceMessage.inMinutes > 15) {
+      throw Exception("Messages can only be edited within 15 minutes");
+    }
+
+    // Don't allow editing of media messages
+    if (message.type != MessageType.text) {
+      throw Exception("Only text messages can be edited");
+    }
+
+    // Validate new content
+    if (newContent.trim().isEmpty) {
+      throw Exception("Message content cannot be empty");
+    }
+
+    try {
+      // Store original content if this is the first edit
+      final originalContent = message.isEdited ? message.originalContent : message.content;
+      
+      // Encrypt new content
+      final encryptedContent = _encryptMessage(newContent, chatRoomId);
+
+      // Create updated message
+      final updatedMessage = message.copyWith(
+        content: newContent.trim(),
+        encryptedContent: encryptedContent,
+        isEdited: true,
+        editedAt: DateTime.now(),
+        originalContent: originalContent,
+      );
+
+      // Update message in storage
+      messages[messageIndex] = updatedMessage;
+
+      // Update chat room's last message if this was the latest message
+      final chatRoom = _chatRooms[chatRoomId];
+      if (chatRoom != null && chatRoom.lastMessageId == messageId) {
+        await _updateChatRoom(chatRoomId, updatedMessage);
+      }
+
+      // Notify listeners
+      _notifyMessageUpdate(chatRoomId);
+
+      return true;
+    } catch (e) {
+      debugPrint('Error editing message: $e');
+      return false;
+    }
+  }
+
+  /**
+   * Delete Message
+   * 
+   * Allows users to delete their own messages within a time limit.
+   * Supports both "delete for me" and "delete for everyone" options.
+   */
+  Future<bool> deleteMessage({
+    required String messageId,
+    required String chatRoomId,
+    bool deleteForEveryone = false,
+  }) async {
+    if (_currentUserId == null) {
+      throw Exception("User not authenticated");
+    }
+
+    final messages = _messages[chatRoomId];
+    if (messages == null) return false;
+
+    final messageIndex = messages.indexWhere((m) => m.id == messageId);
+    if (messageIndex == -1) return false;
+
+    final message = messages[messageIndex];
+
+    // Validate permissions for "delete for everyone"
+    if (deleteForEveryone) {
+      if (message.senderId != _currentUserId) {
+        throw Exception("You can only delete your own messages for everyone");
+      }
+
+      // Check time limit for "delete for everyone" (1 hour)
+      final timeSinceMessage = DateTime.now().difference(message.timestamp);
+      if (timeSinceMessage.inHours > 1) {
+        throw Exception("Messages can only be deleted for everyone within 1 hour");
+      }
+    }
+
+    try {
+      if (deleteForEveryone) {
+        // Replace message content with "deleted" indicator
+        final deletedMessage = message.copyWith(
+          content: "🚫 This message was deleted",
+          encryptedContent: _encryptMessage("🚫 This message was deleted", chatRoomId),
+          type: MessageType.text,
+          mediaAttachment: null, // Remove media attachment if any
+          metadata: {
+            ...?message.metadata,
+            'deleted': true,
+            'deletedAt': DateTime.now().millisecondsSinceEpoch,
+            'deletedBy': _currentUserId,
+          },
+        );
+
+        messages[messageIndex] = deletedMessage;
+
+        // Update chat room's last message if this was the latest message
+        final chatRoom = _chatRooms[chatRoomId];
+        if (chatRoom != null && chatRoom.lastMessageId == messageId) {
+          await _updateChatRoom(chatRoomId, deletedMessage);
+        }
+      } else {
+        // "Delete for me" - just remove from local storage
+        // In a real implementation, you'd mark it as hidden for current user
+        messages.removeAt(messageIndex);
+
+        // If this was the last message, update chat room with previous message
+        final chatRoom = _chatRooms[chatRoomId];
+        if (chatRoom != null && chatRoom.lastMessageId == messageId) {
+          if (messages.isNotEmpty) {
+            await _updateChatRoom(chatRoomId, messages.first);
+          } else {
+            // No more messages, clear last message info
+            final updatedRoom = chatRoom.copyWith(
+              lastMessageId: '',
+              lastMessage: '',
+              lastMessageTime: null,
+              lastMessageSender: '',
+            );
+            _chatRooms[chatRoomId] = updatedRoom;
+          }
+        }
+      }
+
+      // Notify listeners
+      _notifyMessageUpdate(chatRoomId);
+      _notifyChatsUpdate();
+
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting message: $e');
+      return false;
+    }
+  }
+
+  /**
+   * Get Message Edit History
+   * 
+   * Returns the edit history for a specific message.
+   */
+  Future<MessageEditHistory?> getMessageEditHistory(String messageId, String chatRoomId) async {
+    final messages = _messages[chatRoomId];
+    if (messages == null) return null;
+
+    final message = messages.firstWhere(
+      (m) => m.id == messageId,
+      orElse: () => throw Exception("Message not found"),
+    );
+
+    if (!message.isEdited) return null;
+
+    return MessageEditHistory(
+      messageId: messageId,
+      originalContent: message.originalContent ?? message.content,
+      currentContent: message.content,
+      editedAt: message.editedAt ?? DateTime.now(),
+      editCount: 1, // In a real implementation, track multiple edits
+    );
+  }
+
+  /**
+   * Can Edit Message
+   * 
+   * Checks if a message can be edited by the current user.
+   */
+  bool canEditMessage(ChatMessage message) {
+    if (_currentUserId == null || message.senderId != _currentUserId) {
+      return false;
+    }
+
+    if (message.type != MessageType.text) {
+      return false;
+    }
+
+    final timeSinceMessage = DateTime.now().difference(message.timestamp);
+    return timeSinceMessage.inMinutes <= 15;
+  }
+
+  /**
+   * Can Delete Message
+   * 
+   * Checks if a message can be deleted by the current user.
+   */
+  bool canDeleteMessage(ChatMessage message, {bool deleteForEveryone = false}) {
+    if (_currentUserId == null) return false;
+
+    if (deleteForEveryone) {
+      if (message.senderId != _currentUserId) return false;
+      
+      final timeSinceMessage = DateTime.now().difference(message.timestamp);
+      return timeSinceMessage.inHours <= 1;
+    }
+
+    // "Delete for me" is always allowed
+    return true;
   }
 
   /**

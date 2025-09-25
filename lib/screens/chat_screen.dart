@@ -308,27 +308,29 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.7,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isMe ? Colors.blue.shade700 : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: isMe ? const Radius.circular(20) : const Radius.circular(4),
-                  bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(20),
+            child: GestureDetector(
+              onLongPress: () => _showMessageOptions(context, message),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.7,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isMe ? Colors.blue.shade700 : Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: isMe ? const Radius.circular(20) : const Radius.circular(4),
+                    bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(20),
                   ),
-                ],
-              ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -349,12 +351,31 @@ class _ChatScreenState extends State<ChatScreen> {
                     _buildMediaContent(message),
                   // Text content
                   if (message.content.isNotEmpty)
-                    Text(
-                      message.content,
-                      style: TextStyle(
-                        color: isMe ? Colors.white : Colors.black87,
-                        fontSize: 16,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.content,
+                          style: TextStyle(
+                            color: isMe ? Colors.white : Colors.black87,
+                            fontSize: 16,
+                            fontStyle: message.metadata?['deleted'] == true 
+                                ? FontStyle.italic 
+                                : FontStyle.normal,
+                          ),
+                        ),
+                        if (message.isEdited && message.metadata?['deleted'] != true) ..[
+                          const SizedBox(height: 2),
+                          Text(
+                            'edited',
+                            style: TextStyle(
+                              color: isMe ? Colors.white60 : Colors.grey.shade500,
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   const SizedBox(height: 4),
                   Row(
@@ -700,6 +721,350 @@ class _ChatScreenState extends State<ChatScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  // Show message options (edit/delete)
+  void _showMessageOptions(BuildContext context, ChatMessage message) {
+    final isMe = message.senderId == 'current_user';
+    if (!isMe) return; // Only show options for own messages
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Edit option
+            if (_chatService.canEditMessage(message))
+              ListTile(
+                leading: const Icon(Icons.edit, color: Colors.blue),
+                title: const Text('Edit Message'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showEditMessageDialog(message);
+                },
+              ),
+            
+            // Delete for everyone
+            if (_chatService.canDeleteMessage(message, deleteForEveryone: true))
+              ListTile(
+                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                title: const Text('Delete for Everyone'),
+                subtitle: const Text('This will remove the message for all participants'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDeleteMessage(message, deleteForEveryone: true);
+                },
+              ),
+            
+            // Delete for me
+            if (_chatService.canDeleteMessage(message, deleteForEveryone: false))
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.orange),
+                title: const Text('Delete for Me'),
+                subtitle: const Text('This will only remove the message for you'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDeleteMessage(message, deleteForEveryone: false);
+                },
+              ),
+            
+            // Message info
+            ListTile(
+              leading: const Icon(Icons.info_outline, color: Colors.grey),
+              title: const Text('Message Info'),
+              onTap: () {
+                Navigator.pop(context);
+                _showMessageInfo(message);
+              },
+            ),
+            
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show edit message dialog
+  void _showEditMessageDialog(ChatMessage message) {
+    final editController = TextEditingController(text: message.content);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Message'),
+        content: TextField(
+          controller: editController,
+          maxLines: null,
+          decoration: const InputDecoration(
+            hintText: 'Enter your message...',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              editController.dispose();
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newContent = editController.text.trim();
+              if (newContent.isEmpty) {
+                _showError('Message cannot be empty');
+                return;
+              }
+              
+              try {
+                final success = await _chatService.editMessage(
+                  messageId: message.id,
+                  chatRoomId: message.chatRoomId,
+                  newContent: newContent,
+                );
+                
+                if (success) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Message edited successfully')),
+                  );
+                } else {
+                  _showError('Failed to edit message');
+                }
+              } catch (e) {
+                _showError('Error: $e');
+              } finally {
+                editController.dispose();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Confirm delete message
+  void _confirmDeleteMessage(ChatMessage message, {required bool deleteForEveryone}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(deleteForEveryone ? 'Delete for Everyone?' : 'Delete for Me?'),
+        content: Text(
+          deleteForEveryone
+              ? 'This message will be removed for all participants in this chat.'
+              : 'This message will only be removed for you. Other participants will still see it.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final success = await _chatService.deleteMessage(
+                  messageId: message.id,
+                  chatRoomId: message.chatRoomId,
+                  deleteForEveryone: deleteForEveryone,
+                );
+                
+                Navigator.pop(context);
+                
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        deleteForEveryone 
+                            ? 'Message deleted for everyone'
+                            : 'Message deleted for you',
+                      ),
+                    ),
+                  );
+                } else {
+                  _showError('Failed to delete message');
+                }
+              } catch (e) {
+                Navigator.pop(context);
+                _showError('Error: $e');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show message information
+  void _showMessageInfo(ChatMessage message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Message Info'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildInfoRow('Sent', _formatDateTime(message.timestamp)),
+            if (message.isEdited)
+              _buildInfoRow('Edited', _formatDateTime(message.editedAt ?? DateTime.now())),
+            if (message.deliveredAt != null)
+              _buildInfoRow('Delivered', _formatDateTime(message.deliveredAt!)),
+            if (message.readAt != null)
+              _buildInfoRow('Read', _formatDateTime(message.readAt!)),
+            _buildInfoRow('Status', message.status.toString().split('.').last),
+            if (message.readBy.isNotEmpty && _isGroupChat)
+              _buildInfoRow('Read by', '${message.readBy.length} participants'),
+            if (message.mediaAttachment != null)
+              _buildInfoRow('Media Type', message.type.toString().split('.').last),
+          ],
+        ),
+        actions: [
+          if (message.isEdited)
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                final history = await _chatService.getMessageEditHistory(
+                  message.id, 
+                  message.chatRoomId,
+                );
+                if (history != null) {
+                  _showEditHistory(history);
+                }
+              },
+              child: const Text('View Edit History'),
+            ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build info row for message details
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show edit history
+  void _showEditHistory(MessageEditHistory history) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit History'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Original:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              width: double.infinity,
+              child: Text(history.originalContent),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Current:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              width: double.infinity,
+              child: Text(history.currentContent),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Edited: ${_formatDateTime(history.editedAt)}',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Format date time for display
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    
+    if (messageDate == today) {
+      return 'Today ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else if (messageDate == today.subtract(const Duration(days: 1))) {
+      return 'Yesterday ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
   }
 }
