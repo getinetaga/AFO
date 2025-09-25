@@ -25,6 +25,7 @@ dependencies:
   url_launcher: ^6.2.5
   crypto: ^3.0.3
   encrypt: ^5.0.1
+  fl_chart: ^0.68.0
   # Media handling dependencies
   path_provider: ^2.1.2
   path: ^1.8.3

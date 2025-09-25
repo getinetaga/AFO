@@ -36,6 +36,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
+import 'notification_manager.dart';
 
 /// Message delivery status enumeration
 enum MessageStatus {
@@ -457,6 +458,9 @@ class ChatService {
   String? _currentUserId;
   String? _currentUserName;
   
+  // Notification manager
+  final NotificationManager _notificationManager = NotificationManager();
+  
   // Encryption components
   late final Encrypter _encrypter;
   late final IV _iv;
@@ -486,6 +490,21 @@ class ChatService {
   ChatService() {
     _initializeEncryption();
     _initializeMockData();
+    _initializeNotifications();
+  }
+
+  /**
+   * Initialize Notifications
+   * 
+   * Initializes the notification manager for push notifications and alerts.
+   */
+  Future<void> _initializeNotifications() async {
+    try {
+      await _notificationManager.initialize();
+      print('ChatService: Notifications initialized');
+    } catch (e) {
+      print('ChatService: Failed to initialize notifications: $e');
+    }
   }
 
   /**
@@ -607,6 +626,9 @@ class ChatService {
 
     // Simulate message delivery process
     _simulateMessageDelivery(messageId, chatRoomId);
+    
+    // Trigger notification for receiver (simulate receiving message)
+    await _triggerMessageNotification(chatMessage, receiverId);
 
     // Notify listeners
     _notifyMessageUpdate(chatRoomId);
@@ -1597,5 +1619,117 @@ class ChatService {
 
     // Clear encryption keys
     _chatKeys.clear();
+  }
+
+  /**
+   * Notification Methods
+   * 
+   * These methods handle triggering notifications for different types of chat events.
+   */
+
+  // Trigger message notification
+  Future<void> _triggerMessageNotification(ChatMessage message, String receiverId) async {
+    // Don't notify sender about their own message
+    if (message.senderId == _currentUserId) return;
+    
+    try {
+      final chatRoom = _chatRooms[message.chatRoomId];
+      final isGroup = chatRoom?.type == ChatType.group;
+      
+      if (message.type == MessageType.text) {
+        await _notificationManager.showMessageNotification(
+          senderName: message.senderName,
+          senderId: message.senderId,
+          messageContent: message.content,
+          chatRoomId: message.chatRoomId,
+          messageId: message.id,
+          isGroup: isGroup,
+          groupName: isGroup ? chatRoom?.name : null,
+        );
+      } else {
+        // Media notification
+        final mediaType = message.type.toString().split('.').last;
+        await _notificationManager.showMediaNotification(
+          senderName: message.senderName,
+          senderId: message.senderId,
+          mediaType: mediaType,
+          chatRoomId: message.chatRoomId,
+          messageId: message.id,
+          isGroup: isGroup,
+          groupName: isGroup ? chatRoom?.name : null,
+        );
+      }
+    } catch (e) {
+      print('Failed to trigger message notification: $e');
+    }
+  }
+
+  // Trigger call notification
+  Future<void> triggerCallNotification({
+    required String callerName,
+    required String callerId,
+    required String callId,
+    required bool isVideoCall,
+    String? callerAvatar,
+  }) async {
+    try {
+      await _notificationManager.showCallNotification(
+        callerName: callerName,
+        callerId: callerId,
+        callId: callId,
+        isVideoCall: isVideoCall,
+        callerAvatar: callerAvatar,
+      );
+    } catch (e) {
+      print('Failed to trigger call notification: $e');
+    }
+  }
+
+  // Trigger group activity notification
+  Future<void> _triggerGroupActivityNotification({
+    required String groupName,
+    required String groupId,
+    required String activity,
+    required String actorName,
+    required String actorId,
+  }) async {
+    try {
+      await _notificationManager.showGroupActivityNotification(
+        groupName: groupName,
+        groupId: groupId,
+        activity: activity,
+        actorName: actorName,
+        actorId: actorId,
+      );
+    } catch (e) {
+      print('Failed to trigger group activity notification: $e');
+    }
+  }
+
+  // Clear notifications for chat
+  Future<void> clearNotificationsForChat(String chatRoomId) async {
+    try {
+      await _notificationManager.clearNotificationsForChat(chatRoomId);
+    } catch (e) {
+      print('Failed to clear notifications for chat: $e');
+    }
+  }
+
+  // Clear all notifications
+  Future<void> clearAllNotifications() async {
+    try {
+      await _notificationManager.clearAllNotifications();
+    } catch (e) {
+      print('Failed to clear all notifications: $e');
+    }
+  }
+
+  // Refresh notification settings
+  Future<void> refreshNotificationSettings() async {
+    try {
+      await _notificationManager.refreshSettings();
+    } catch (e) {
+      print('Failed to refresh notification settings: $e');
+    }
   }
 }
