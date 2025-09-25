@@ -1,0 +1,41 @@
+# ============================================================================
+# AFO Chat Application - Package Configuration
+# ============================================================================
+# Package configuration for the AFO (Afaan Oromoo Chat Services) application.
+# This Flutter app provides comprehensive chat functionality with voice/video
+# calling capabilities for the Afaan Oromoo speaking community.
+# ============================================================================
+
+name: afochatapplication
+description: AFO (Afaan Oromoo Chat Services) - Flutter chat app with voice/video calling
+publish_to: "none"
+version: 1.0.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  provider: ^6.1.2
+  http: ^1.2.0
+  flutter_secure_storage: ^9.2.2
+  google_sign_in: ^6.2.1
+  url_launcher: ^6.2.5
+  crypto: ^3.0.3
+  encrypt: ^5.0.1
+  # Media handling dependencies
+  path_provider: ^2.1.2
+  path: ^1.8.3
+  # Note: In production, you would also add:
+  # image_picker: ^1.0.7
+  # file_picker: ^8.0.0+1
+  # video_player: ^2.8.2
+  # audio_players: ^5.2.1
+  # image: ^4.1.6
+  # video_thumbnail: ^0.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
