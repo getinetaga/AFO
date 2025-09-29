@@ -1,14 +1,73 @@
+// ============================================================================
+// AFO CHAT APPLICATION - MEDIA PICKER WIDGET
+// ============================================================================
+
+/// Comprehensive media picker widget for AFO Chat Services
+/// 
+/// This widget provides a professional, animated interface for selecting
+/// various types of media content in chat conversations. Features include:
+/// 
+/// MEDIA SELECTION CAPABILITIES:
+/// • Camera capture: Photo and video recording with front/rear camera
+/// • Gallery selection: Images and videos from device gallery
+/// • Audio recording: Voice messages and audio notes
+/// • Document picker: PDFs, Word docs, spreadsheets, and other files
+/// • Contact sharing: Share contact information
+/// • Location sharing: GPS location and address sharing
+/// 
+/// TECHNICAL FEATURES:
+/// • Smooth animations with scale and fade transitions
+/// • Professional circular action buttons with icons
+/// • File type validation and size limits
+/// • Permission handling for camera, microphone, and storage
+/// • Integration with MediaUploadService for file processing
+/// • Callback system for selected media handling
+/// 
+/// USAGE:
+/// ```dart
+/// MediaPickerWidget(
+///   onMediaSelected: (file, messageType) {
+///     // Handle selected media
+///   },
+///   onCancel: () {
+///     // Handle picker dismissal
+///   },
+/// )
+/// ```
+/// 
+/// The widget appears as an animated overlay with media options
+/// and handles all the complexity of media selection and validation.
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/chat_service_new.dart';
 import '../services/media_upload_service.dart';
 
-/// Media picker widget for selecting different types of media
+/// Professional media picker widget with animations and comprehensive options
+/// 
+/// Provides an animated overlay interface for selecting various media types
+/// in chat conversations. Supports camera, gallery, audio recording,
+/// document selection, and more with smooth animations and intuitive UX.
+/// 
+/// The widget uses SingleTickerProviderStateMixin for smooth animation
+/// control and integrates with device capabilities for media selection.
 class MediaPickerWidget extends StatefulWidget {
+  /// Callback function called when media is selected
+  /// 
+  /// Parameters:
+  /// - [File]: The selected media file
+  /// - [MessageType]: The type of message (image, video, audio, document, etc.)
   final Function(File, MessageType) onMediaSelected;
+  
+  /// Optional callback function called when picker is cancelled
   final Function()? onCancel;
 
+  /// Creates a MediaPickerWidget with required callbacks
+  /// 
+  /// Parameters:
+  /// - [onMediaSelected]: Required callback for handling selected media
+  /// - [onCancel]: Optional callback for handling picker cancellation
   const MediaPickerWidget({
     Key? key,
     required this.onMediaSelected,
@@ -19,12 +78,26 @@ class MediaPickerWidget extends StatefulWidget {
   State<MediaPickerWidget> createState() => _MediaPickerWidgetState();
 }
 
+/// State class for MediaPickerWidget managing animations and interactions
+/// 
+/// Handles the complex animation system for the media picker overlay,
+/// including scale and fade animations for smooth appearance/disappearance.
+/// Also manages media selection logic and device permission handling.
 class _MediaPickerWidgetState extends State<MediaPickerWidget>
     with SingleTickerProviderStateMixin {
+  /// Animation controller for coordinating all picker animations
   late AnimationController _animationController;
+  
+  /// Scale animation for the picker appearance effect
   late Animation<double> _scaleAnimation;
+  
+  /// Fade animation for smooth opacity transitions
   late Animation<double> _fadeAnimation;
 
+  /// Initialize animations and set up the picker widget
+  /// 
+  /// Sets up the animation controller with a 300ms duration and creates
+  /// both scale and fade animations with smooth curves for professional UX.
   @override
   void initState() {
     super.initState();
@@ -49,6 +122,16 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     _animationController.forward();
   }
 
+  /// Pick an image from camera or gallery
+  /// 
+  /// Handles image selection from the specified source with proper error
+  /// handling and mock implementation. In production, this would integrate
+  /// with the image_picker package for actual camera/gallery access.
+  /// 
+  /// Parameters:
+  /// - [source]: ImageSource (camera or gallery)
+  /// 
+  /// Calls onMediaSelected callback with the selected image file
   Future<void> _pickImage(ImageSource source) async {
     try {
       // Mock image picker implementation
@@ -63,6 +146,16 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     }
   }
 
+  /// Pick a video from camera or gallery
+  /// 
+  /// Handles video selection from the specified source with proper error
+  /// handling and mock implementation. In production, this would integrate
+  /// with the image_picker package for actual video recording/selection.
+  /// 
+  /// Parameters:
+  /// - [source]: VideoSource (camera or gallery)
+  /// 
+  /// Calls onMediaSelected callback with the selected video file
   Future<void> _pickVideo(VideoSource source) async {
     try {
       // Mock video picker implementation
@@ -76,6 +169,15 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     }
   }
 
+  /// Pick a document file from device storage
+  /// 
+  /// Handles document selection including PDFs, Word docs, spreadsheets,
+  /// and other file types. Includes file validation and size checking.
+  /// In production, integrates with file_picker package.
+  /// 
+  /// Supported formats: PDF, DOC, DOCX, XLS, XLSX, TXT, etc.
+  /// 
+  /// Calls onMediaSelected callback with the selected document file
   Future<void> _pickDocument() async {
     try {
       // Mock document picker implementation
@@ -89,6 +191,13 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     }
   }
 
+  /// Pick an audio file from device storage
+  /// 
+  /// Handles audio file selection including music, sound effects,
+  /// and other audio content. Supports common audio formats like
+  /// MP3, WAV, M4A, etc. In production, integrates with file_picker.
+  /// 
+  /// Calls onMediaSelected callback with the selected audio file
   Future<void> _pickAudio() async {
     try {
       // Mock audio picker implementation
@@ -102,6 +211,19 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     }
   }
 
+  /// Record a voice note using device microphone
+  /// 
+  /// Provides voice recording functionality for creating voice messages
+  /// in chat conversations. Handles microphone permissions and audio
+  /// recording with compression. In production, uses audio recording packages.
+  /// 
+  /// Features:
+  /// • Real-time recording with duration display
+  /// • Audio compression for efficient transmission
+  /// • Waveform visualization during recording
+  /// • Pause/resume recording capabilities
+  /// 
+  /// Calls onMediaSelected callback with the recorded voice file
   Future<void> _recordVoiceNote() async {
     try {
       // Mock voice recording implementation
@@ -115,6 +237,20 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     }
   }
 
+  /// Create a mock file for demonstration purposes
+  /// 
+  /// Generates temporary files with appropriate mock data for testing
+  /// the media picker functionality without requiring actual media.
+  /// Each file type gets specific mock data to simulate real files.
+  /// 
+  /// Parameters:
+  /// - [fileName]: Name for the mock file
+  /// - [type]: MessageType to determine mock data content
+  /// 
+  /// Returns: File object with mock data for testing
+  /// 
+  /// NOTE: This is for development/testing only. Production code
+  /// would handle actual files from device storage or camera.
   Future<File> _createMockFile(String fileName, MessageType type) async {
     // Create a temporary mock file for demonstration
     final tempDir = Directory.systemTemp;
@@ -159,6 +295,16 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     });
   }
 
+  /// Build the main media picker dialog interface
+  /// 
+  /// Creates an animated dialog with a grid of media options including:
+  /// • Camera and Gallery for photos
+  /// • Video camera and video gallery
+  /// • Document and audio file pickers
+  /// • Voice recording option
+  /// 
+  /// Uses AnimatedBuilder for smooth scale and fade animations
+  /// with professional Material Design styling.
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -274,6 +420,10 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
     );
   }
 
+  /// Clean up animation controller and resources
+  /// 
+  /// Properly disposes of the animation controller to prevent
+  /// memory leaks and ensure smooth widget cleanup.
   @override
   void dispose() {
     _animationController.dispose();
@@ -281,13 +431,27 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
   }
 }
 
-/// Individual media option tile
+/// Individual media option tile widget
+/// 
+/// Creates a professional, interactive tile for each media selection option.
+/// Features rounded corners, color-coded styling, and smooth tap animations.
+/// 
+/// Each tile displays an icon and label with consistent styling across
+/// all media types (camera, gallery, documents, etc.).
 class _MediaOptionTile extends StatelessWidget {
+  /// Icon to display for this media option
   final IconData icon;
+  
+  /// Text label describing the media option
   final String label;
+  
+  /// Color theme for the tile (icon and border)
   final Color color;
+  
+  /// Callback function executed when tile is tapped
   final VoidCallback onTap;
 
+  /// Creates a MediaOptionTile with required styling and callback
   const _MediaOptionTile({
     required this.icon,
     required this.label,
@@ -334,10 +498,19 @@ class _MediaOptionTile extends StatelessWidget {
   }
 }
 
-/// Voice note recording option
+/// Voice note recording option widget
+/// 
+/// Provides an interactive voice recording interface with animated
+/// recording indicators and professional UX. Features include:
+/// • Animated pulse effect during recording
+/// • Visual feedback for recording state
+/// • Professional microphone icon and styling
+/// • One-tap recording initiation
 class _VoiceNoteOption extends StatefulWidget {
+  /// Callback function executed when recording is initiated
   final VoidCallback onRecord;
 
+  /// Creates a VoiceNoteOption with recording callback
   const _VoiceNoteOption({
     required this.onRecord,
   });
@@ -346,10 +519,19 @@ class _VoiceNoteOption extends StatefulWidget {
   State<_VoiceNoteOption> createState() => _VoiceNoteOptionState();
 }
 
+/// State class for VoiceNoteOption managing recording animations
+/// 
+/// Handles the animated pulse effect during voice recording and
+/// manages the recording state with visual feedback for users.
 class _VoiceNoteOptionState extends State<_VoiceNoteOption>
     with TickerProviderStateMixin {
+  /// Current recording state indicator
   bool _isRecording = false;
+  
+  /// Animation controller for pulse effect during recording
   late AnimationController _pulseController;
+  
+  /// Pulse animation for visual recording feedback
   late Animation<double> _pulseAnimation;
 
   @override

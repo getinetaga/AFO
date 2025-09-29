@@ -3,40 +3,117 @@
 # ============================================================================
 # Package configuration for the AFO (Afaan Oromoo Chat Services) application.
 # This Flutter app provides comprehensive chat functionality with voice/video
-# calling capabilities for the Afaan Oromoo speaking community.
+# calling capabilities, admin dashboard, and notification system for the
+# Afaan Oromoo speaking community.
 # ============================================================================
 
 name: afochatapplication
-description: AFO (Afaan Oromoo Chat Services) - Flutter chat app with voice/video calling
+description: AFO (Afaan Oromoo Chat Services) - Flutter chat app with voice/video calling, admin dashboard, and notifications
 publish_to: "none"
-version: 1.0.0
+version: 1.0.0+1
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.24.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
+  # State Management
   provider: ^6.1.2
-  http: ^1.2.0
+  
+  # Networking & HTTP
+  http: ^1.2.2
+  dio: ^5.4.0
+  
+  # Authentication & Security
   flutter_secure_storage: ^9.2.2
   google_sign_in: ^6.2.1
-  url_launcher: ^6.2.5
   crypto: ^3.0.3
-  encrypt: ^5.0.1
-  fl_chart: ^0.68.0
+  encrypt: ^5.0.3
+  
+  # Firebase Services (for notifications and backend)
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.3
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_storage: ^12.3.2
+  
+  # Local Notifications
+  flutter_local_notifications: ^17.2.3
+  
+  # UI & Charts
+  fl_chart: ^0.69.0
+  
+  # Utilities
+  url_launcher: ^6.3.0
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  intl: ^0.19.0
+  uuid: ^4.5.1
+  
   # Media handling dependencies
-  path_provider: ^2.1.2
-  path: ^1.8.3
-  # Note: In production, you would also add:
-  # image_picker: ^1.0.7
-  # file_picker: ^8.0.0+1
-  # video_player: ^2.8.2
-  # audio_players: ^5.2.1
-  # image: ^4.1.6
-  # video_thumbnail: ^0.5.3
+  image_picker: ^1.1.2
+  file_picker: ^8.1.2
+  video_player: ^2.9.1
+  audioplayers: ^6.1.0
+  image: ^4.2.0
+  video_thumbnail: ^0.5.3
+  
+  # Permissions
+  permission_handler: ^11.3.1
+  
+  # WebRTC for video calling
+  flutter_webrtc: ^0.11.7
+  
+  # Additional UI components
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.12
+
+# Flutter configuration
+flutter:
+  uses-material-design: true
+  
+  # Assets configuration
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/sounds/
+  
+  # Fonts configuration  
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto-Regular.ttf
+        - asset: fonts/Roboto-Bold.ttf
+          weight: 700
+    - family: OromiOromoo
+      fonts:
+        - asset: fonts/OromiOromoo-Regular.ttf
+        - asset: fonts/OromiOromoo-Bold.ttf
+          weight: 700
+
+# Platform-specific configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/afo_logo.png"
+  min_sdk_android: 21
+
+# Additional metadata
+metadata:
+  project_type: "flutter_app"
+  features:
+    - "chat_messaging"
+    - "voice_video_calls" 
+    - "admin_dashboard"
+    - "notifications"
+    - "user_management"
+    - "content_moderation"

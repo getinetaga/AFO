@@ -1,149 +1,304 @@
-import 'package:shared_preferences/shared_preferences.dart';
+// ============================================================================
+// AFO Chat Application - Notification Settings Model
+// ============================================================================
+// This file defines the comprehensive notification settings model for the AFO
+// (Afaan Oromoo Chat Services) application. It handles all notification
+// preferences, privacy settings, and user customization options.
+//
+// Features:
+// - Message notification preferences (sound, vibration, ringtones)
+// - Call notification settings with custom ringtones
+// - Group notification controls with mention-only options
+// - Media notification settings for file sharing
+// - Status notification preferences (delivery/read receipts, typing)
+// - System notification settings (security, backup alerts)
+// - Do Not Disturb scheduling with time ranges
+// - Privacy controls (hide content, sender info)
+// - Badge count management and display options
+// - Persistent storage using SharedPreferences
+// ============================================================================
 
-// Notification settings model
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+
+/// Comprehensive notification settings model for AFO chat application
+/// 
+/// This class manages all user notification preferences including:
+/// - Individual notification types (messages, calls, groups, media)
+/// - Sound and vibration settings for each notification type
+/// - Privacy and display preferences
+/// - Do Not Disturb scheduling
+/// - Badge count management
 class NotificationSettings {
-  // Message notifications
+  // ========================================================================
+  // MESSAGE NOTIFICATION SETTINGS
+  // ========================================================================
+  
+  /// Enable/disable message notifications globally
   bool messageNotifications;
+  
+  /// Enable sound for message notifications
   bool messageSound;
+  
+  /// Enable vibration for message notifications
   bool messageVibration;
+  
+  /// Custom ringtone identifier for message notifications
   String messageRingtone;
+  
+  /// Show message preview in notifications
   bool messagePreview;
   
-  // Call notifications
+  // ========================================================================
+  // CALL NOTIFICATION SETTINGS
+  // ========================================================================
+  
+  /// Enable/disable call notifications
   bool callNotifications;
+  
+  /// Enable sound for incoming calls
   bool callSound;
+  
+  /// Enable vibration for incoming calls
   bool callVibration;
+  
+  /// Custom ringtone identifier for incoming calls
   String callRingtone;
   
-  // Group notifications
+  // ========================================================================
+  // GROUP NOTIFICATION SETTINGS
+  // ========================================================================
+  
+  /// Enable/disable group notifications
   bool groupNotifications;
+  
+  /// Enable sound for group notifications
   bool groupSound;
+  
+  /// Enable vibration for group notifications
   bool groupVibration;
+  
+  /// Custom ringtone identifier for group notifications
   String groupRingtone;
+  
+  /// Only notify when user is mentioned in group (@username)
   bool groupMentionOnly;
   
-  // Media notifications
+  // ========================================================================
+  // MEDIA NOTIFICATION SETTINGS
+  // ========================================================================
+  
+  /// Enable/disable media sharing notifications
   bool mediaNotifications;
+  
+  /// Enable sound for media notifications (usually disabled)
   bool mediaSound;
+  
+  /// Enable vibration for media notifications
   bool mediaVibration;
   
-  // Status notifications
+  // ========================================================================
+  // STATUS NOTIFICATION SETTINGS
+  // ========================================================================
+  
+  /// Show delivery receipt notifications
   bool deliveryReceipts;
+  
+  /// Show read receipt notifications
   bool readReceipts;
+  
+  /// Show typing indicator notifications
   bool typingIndicators;
   
-  // System notifications
+  // ========================================================================
+  // SYSTEM NOTIFICATION SETTINGS
+  // ========================================================================
+  
+  /// Enable system-wide notifications
   bool systemNotifications;
+  
+  /// Enable security alert notifications (login attempts, etc.)
   bool securityAlerts;
+  
+  /// Enable backup reminder notifications
   bool backupReminders;
   
-  // General settings
-  bool notificationsEnabled;
-  bool doNotDisturb;
-  TimeOfDay? doNotDisturbStart;
-  TimeOfDay? doNotDisturbEnd;
-  bool showOnLockScreen;
-  bool showSenderInfo;
-  int notificationTimeout; // in seconds
+  // ========================================================================
+  // GENERAL NOTIFICATION SETTINGS
+  // ========================================================================
   
-  // Privacy settings
+  /// Master switch for all notifications
+  bool notificationsEnabled;
+  
+  /// Enable Do Not Disturb mode
+  bool doNotDisturb;
+  
+  /// Start time for Do Not Disturb period
+  TimeOfDay? doNotDisturbStart;
+  
+  /// End time for Do Not Disturb period
+  TimeOfDay? doNotDisturbEnd;
+  
+  /// Show notifications on device lock screen
+  bool showOnLockScreen;
+  
+  /// Display sender information in notifications
+  bool showSenderInfo;
+  
+  /// Notification timeout duration in seconds
+  int notificationTimeout;
+  
+  // ========================================================================
+  // PRIVACY SETTINGS
+  // ========================================================================
+  
+  /// Hide notification content for privacy
+  /// Hide notification content for privacy
   bool hideNotificationContent;
+  
+  /// Hide message preview in notifications
   bool hidePreview;
+  
+  /// Hide sender name in notifications
   bool hideSenderName;
   
-  // Badge settings
+  // ========================================================================
+  // BADGE SETTINGS
+  // ========================================================================
+  
+  /// Show unread count badge on app icon
   bool showBadgeCount;
+  
+  /// Reset badge count when app is opened
   bool resetBadgeOnOpen;
 
+  /// Constructor with default values optimized for user experience
+  /// 
+  /// All notification types are enabled by default with sensible settings.
+  /// Privacy features are disabled by default for better user engagement.
+  /// Do Not Disturb is disabled to ensure important messages are received.
   NotificationSettings({
-    // Message defaults
-    this.messageNotifications = true,
-    this.messageSound = true,
-    this.messageVibration = true,
-    this.messageRingtone = 'default_message',
-    this.messagePreview = true,
+    // ====================================================================
+    // MESSAGE NOTIFICATION DEFAULTS
+    // ====================================================================
+    this.messageNotifications = true,     // Enable message notifications
+    this.messageSound = true,             // Enable sound for engagement
+    this.messageVibration = true,         // Enable vibration for attention
+    this.messageRingtone = 'default_message', // Default system ringtone
+    this.messagePreview = true,           // Show previews for quick reading
     
-    // Call defaults
-    this.callNotifications = true,
-    this.callSound = true,
-    this.callVibration = true,
-    this.callRingtone = 'default_call',
+    // ====================================================================
+    // CALL NOTIFICATION DEFAULTS  
+    // ====================================================================
+    this.callNotifications = true,        // Critical for communication
+    this.callSound = true,                // Essential for incoming calls
+    this.callVibration = true,            // Backup alert method
+    this.callRingtone = 'default_call',   // Distinctive call ringtone
     
-    // Group defaults
-    this.groupNotifications = true,
-    this.groupSound = true,
-    this.groupVibration = true,
-    this.groupRingtone = 'default_group',
-    this.groupMentionOnly = false,
+    // ====================================================================
+    // GROUP NOTIFICATION DEFAULTS
+    // ====================================================================
+    this.groupNotifications = true,       // Enable group participation
+    this.groupSound = true,               // Group activity awareness
+    this.groupVibration = true,           // Physical notification
+    this.groupRingtone = 'default_group', // Group-specific sound
+    this.groupMentionOnly = false,        // Show all group messages initially
     
-    // Media defaults
-    this.mediaNotifications = true,
-    this.mediaSound = false,
-    this.mediaVibration = true,
+    // ====================================================================
+    // MEDIA NOTIFICATION DEFAULTS
+    // ====================================================================
+    this.mediaNotifications = true,       // Important for file sharing
+    this.mediaSound = false,              // Quiet for media to avoid spam
+    this.mediaVibration = true,           // Subtle physical alert
     
-    // Status defaults
-    this.deliveryReceipts = false,
-    this.readReceipts = false,
-    this.typingIndicators = false,
+    // ====================================================================
+    // STATUS NOTIFICATION DEFAULTS
+    // ====================================================================
+    this.deliveryReceipts = false,        // Reduce notification noise
+    this.readReceipts = false,            // Privacy-friendly default
+    this.typingIndicators = false,        // Minimize interruptions
     
-    // System defaults
-    this.systemNotifications = true,
-    this.securityAlerts = true,
-    this.backupReminders = true,
+    // ====================================================================
+    // SYSTEM NOTIFICATION DEFAULTS
+    // ====================================================================
+    this.systemNotifications = true,      // Important system messages
+    this.securityAlerts = true,           // Critical for account safety
+    this.backupReminders = true,          // Data protection awareness
     
-    // General defaults
-    this.notificationsEnabled = true,
-    this.doNotDisturb = false,
-    this.doNotDisturbStart,
-    this.doNotDisturbEnd,
-    this.showOnLockScreen = true,
-    this.showSenderInfo = true,
-    this.notificationTimeout = 5,
+    // ====================================================================
+    // GENERAL NOTIFICATION DEFAULTS
+    // ====================================================================
+    this.notificationsEnabled = true,     // Master switch enabled
+    this.doNotDisturb = false,            // Allow notifications by default
+    this.doNotDisturbStart,               // No DND schedule initially
+    this.doNotDisturbEnd,                 // No DND schedule initially
+    this.showOnLockScreen = true,         // Convenient access
+    this.showSenderInfo = true,           // Helpful identification
+    this.notificationTimeout = 5,         // 5 second display duration
     
-    // Privacy defaults
-    this.hideNotificationContent = false,
-    this.hidePreview = false,
-    this.hideSenderName = false,
+    // ====================================================================
+    // PRIVACY DEFAULTS (Less restrictive for better UX)
+    // ====================================================================
+    this.hideNotificationContent = false, // Show content for convenience
+    this.hidePreview = false,             // Show previews for efficiency
+    this.hideSenderName = false,          // Show sender for context
     
-    // Badge defaults
-    this.showBadgeCount = true,
-    this.resetBadgeOnOpen = true,
+    // ====================================================================
+    // BADGE DEFAULTS
+    // ====================================================================
+    this.showBadgeCount = true,           // Visual unread indicator
+    this.resetBadgeOnOpen = true,         // Clean state when app opens
   });
 
-  // Convert to JSON for storage
+  /// Convert notification settings to JSON format for persistent storage
+  /// 
+  /// Returns a Map containing all notification preferences that can be
+  /// stored in SharedPreferences or sent to a backend service.
+  /// 
+  /// Special handling for TimeOfDay objects which are converted to 
+  /// "HH:MM" string format for storage compatibility.
   Map<String, dynamic> toJson() {
     return {
+      // Message settings
       'messageNotifications': messageNotifications,
       'messageSound': messageSound,
       'messageVibration': messageVibration,
       'messageRingtone': messageRingtone,
       'messagePreview': messagePreview,
       
+      // Call settings
       'callNotifications': callNotifications,
       'callSound': callSound,
       'callVibration': callVibration,
       'callRingtone': callRingtone,
       
+      // Group settings
       'groupNotifications': groupNotifications,
       'groupSound': groupSound,
       'groupVibration': groupVibration,
       'groupRingtone': groupRingtone,
       'groupMentionOnly': groupMentionOnly,
       
+      // Media settings
       'mediaNotifications': mediaNotifications,
       'mediaSound': mediaSound,
       'mediaVibration': mediaVibration,
       
+      // Status settings
       'deliveryReceipts': deliveryReceipts,
       'readReceipts': readReceipts,
       'typingIndicators': typingIndicators,
       
+      // System settings
       'systemNotifications': systemNotifications,
       'securityAlerts': securityAlerts,
       'backupReminders': backupReminders,
       
+      // General settings
       'notificationsEnabled': notificationsEnabled,
       'doNotDisturb': doNotDisturb,
+      
+      // Convert TimeOfDay to string format for storage
       'doNotDisturbStart': doNotDisturbStart != null 
           ? '${doNotDisturbStart!.hour}:${doNotDisturbStart!.minute}'
           : null,
@@ -154,39 +309,74 @@ class NotificationSettings {
       'showSenderInfo': showSenderInfo,
       'notificationTimeout': notificationTimeout,
       
+      // Privacy settings
       'hideNotificationContent': hideNotificationContent,
       'hidePreview': hidePreview,
       'hideSenderName': hideSenderName,
       
+      // Badge settings
       'showBadgeCount': showBadgeCount,
       'resetBadgeOnOpen': resetBadgeOnOpen,
     };
   }
 
-  // Create from JSON
+  /// Create NotificationSettings instance from JSON data
+  /// 
+  /// Used when loading settings from persistent storage (SharedPreferences)
+  /// or receiving settings from a backend service.
+  /// 
+  /// Includes safe fallbacks to default values if JSON data is missing
+  /// or corrupted. TimeOfDay strings are parsed back to TimeOfDay objects.
+  /// 
+  /// Parameters:
+  /// - [json]: Map containing notification settings data
+  /// 
+  /// Returns: NotificationSettings instance with loaded or default values
   factory NotificationSettings.fromJson(Map<String, dynamic> json) {
+    /// Helper function to safely parse TimeOfDay from "HH:MM" string format
+    /// 
+    /// Handles edge cases:
+    /// - Null or empty strings return null
+    /// - Invalid format returns null  
+    /// - Invalid hour/minute values default to 0
     TimeOfDay? parseTimeOfDay(String? timeString) {
-      if (timeString == null) return null;
+      if (timeString == null || timeString.isEmpty) return null;
+      
       final parts = timeString.split(':');
       if (parts.length != 2) return null;
-      return TimeOfDay(
-        hour: int.tryParse(parts[0]) ?? 0,
-        minute: int.tryParse(parts[1]) ?? 0,
-      );
+      
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+      
+      // Validate time ranges
+      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        return null;
+      }
+      
+      return TimeOfDay(hour: hour, minute: minute);
     }
 
     return NotificationSettings(
+      // ====================================================================
+      // MESSAGE SETTINGS - Load with safe fallbacks
+      // ====================================================================
       messageNotifications: json['messageNotifications'] ?? true,
       messageSound: json['messageSound'] ?? true,
       messageVibration: json['messageVibration'] ?? true,
       messageRingtone: json['messageRingtone'] ?? 'default_message',
       messagePreview: json['messagePreview'] ?? true,
       
+      // ====================================================================
+      // CALL SETTINGS - Critical settings with safe defaults
+      // ====================================================================
       callNotifications: json['callNotifications'] ?? true,
       callSound: json['callSound'] ?? true,
       callVibration: json['callVibration'] ?? true,
       callRingtone: json['callRingtone'] ?? 'default_call',
       
+      // ====================================================================
+      // GROUP SETTINGS - Community engagement preferences
+      // ====================================================================
       groupNotifications: json['groupNotifications'] ?? true,
       groupSound: json['groupSound'] ?? true,
       groupVibration: json['groupVibration'] ?? true,

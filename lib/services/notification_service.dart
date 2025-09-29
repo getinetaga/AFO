@@ -1,3 +1,51 @@
+// ============================================================================
+// AFO CHAT APPLICATION - NOTIFICATION SERVICE
+// ============================================================================
+
+/// Comprehensive notification service for AFO Chat Services
+/// 
+/// This service manages all notification functionality for the AFO chat
+/// application, providing both local and push notifications with advanced
+/// customization and intelligent delivery systems.
+/// 
+/// CORE NOTIFICATION FEATURES:
+/// • Local notifications: In-app alerts and banners
+/// • Push notifications: Firebase Cloud Messaging integration
+/// • Rich notifications: Images, actions, and custom layouts
+/// • Notification scheduling: Delayed and recurring notifications
+/// • Sound management: Custom sounds and vibration patterns
+/// • Badge management: App icon badge count updates
+/// 
+/// NOTIFICATION TYPES:
+/// • Message notifications: New chat messages with sender info
+/// • Call notifications: Incoming voice/video calls
+/// • Group activity: Group joins, leaves, and updates
+/// • Media notifications: File, image, and video sharing
+/// • Delivery status: Message delivered and read receipts
+/// • System updates: App updates and maintenance notices
+/// 
+/// INTELLIGENT FEATURES:
+/// • Smart grouping: Related notifications bundled together
+/// • Quiet hours: Automatic notification suppression
+/// • Priority handling: Critical notifications bypass Do Not Disturb
+/// • Adaptive delivery: Frequency limiting and smart timing
+/// • Context awareness: Location and activity-based filtering
+/// • User preferences: Granular notification control settings
+/// 
+/// TECHNICAL INTEGRATION:
+/// • Flutter Local Notifications: Cross-platform local notifications
+/// • Firebase Messaging: Cloud push notification delivery
+/// • Permission Handler: Runtime permission management
+/// • AudioPlayers: Custom notification sounds
+/// • Vibration: Haptic feedback patterns
+/// • SharedPreferences: User preference persistence
+/// 
+/// SECURITY & PRIVACY:
+/// • End-to-end encryption for notification content
+/// • Privacy-preserving message previews
+/// • Secure token management for push notifications
+/// • User consent and opt-out mechanisms
+
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -9,24 +57,59 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-// Notification types enum
+// ============================================================================
+// NOTIFICATION ENUMS AND TYPES
+// ============================================================================
+
+/// Comprehensive notification type classification
+/// 
+/// Defines all possible notification types in the AFO chat system,
+/// enabling specific handling, styling, and user preferences for
+/// different categories of notifications.
 enum NotificationType {
+  /// New chat message received
   message,
+  
+  /// Incoming voice or video call
   call,
+  
+  /// Group activity (joins, leaves, updates)
   groupActivity,
+  
+  /// Media file received (image, video, document)
   mediaReceived,
+  
+  /// Message delivery confirmation
   messageDelivered,
+  
+  /// Message read receipt
   messageRead,
+  
+  /// User typing indicator
   typing,
+  
+  /// Group invitation received
   groupInvite,
+  
+  /// Contact request received
   contactRequest,
+  
+  /// System update or maintenance notice
   systemUpdate
 }
 
-// Notification priority levels
+/// Notification priority levels for intelligent delivery
+/// 
+/// Determines notification urgency and how it should be presented
+/// to the user, affecting sound, vibration, and display behavior.
 enum NotificationPriority {
+  /// Low priority: Silent notifications, minimal disruption
   low,
+  
+  /// Normal priority: Standard notification behavior
   normal,
+  
+  /// High priority: Bypass Do Not Disturb, prominent display
   high,
   urgent
 }

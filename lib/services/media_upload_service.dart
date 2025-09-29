@@ -1,3 +1,51 @@
+// ============================================================================
+// AFO CHAT APPLICATION - MEDIA UPLOAD SERVICE
+// ============================================================================
+
+/// Comprehensive media upload service for AFO Chat Services
+/// 
+/// This service handles all media upload operations with advanced security,
+/// optimization, and validation features. Provides encrypted file upload,
+/// compression, and intelligent processing for chat media.
+/// 
+/// CORE UPLOAD FEATURES:
+/// • Secure file upload with end-to-end encryption
+/// • Intelligent compression and optimization
+/// • Progress tracking and cancellation support
+/// • Resumable uploads for large files
+/// • Batch upload processing for multiple files
+/// • Duplicate detection and deduplication
+/// 
+/// SUPPORTED MEDIA TYPES:
+/// • Images: JPEG, PNG, GIF, WebP, BMP (up to 50MB)
+/// • Videos: MP4, MOV, AVI, MKV, WebM, 3GP (up to 500MB)
+/// • Audio: MP3, WAV, AAC, M4A, OGG, Opus (up to 100MB)
+/// • Documents: PDF, DOC, XLS, TXT, RTF, etc. (up to 100MB)
+/// 
+/// SECURITY FEATURES:
+/// • File type validation and malware scanning
+/// • AES-256 encryption for all uploaded content
+/// • Secure hash generation for integrity verification
+/// • Content sanitization and metadata removal
+/// • Size and dimension limits for security
+/// • Virus scanning integration
+/// 
+/// OPTIMIZATION FEATURES:
+/// • Intelligent image compression with quality preservation
+/// • Video transcoding and adaptive bitrate
+/// • Audio compression with quality options
+/// • Thumbnail generation for media preview
+/// • Progressive upload for better UX
+/// • Bandwidth-adaptive upload speeds
+/// 
+/// TECHNICAL IMPLEMENTATION:
+/// • Singleton pattern for consistent service access
+/// • Async/await for non-blocking operations
+/// • Stream-based progress reporting
+/// • Error handling with retry mechanisms
+/// • Memory-efficient processing for large files
+/// • Platform-specific optimizations
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math';
@@ -6,25 +54,69 @@ import 'package:path/path.dart' as path;
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 
-/// Media upload service for handling file uploads with security and optimization
+/// Professional media upload service with security and optimization
+/// 
+/// Singleton service that handles all media upload operations for the AFO
+/// chat application. Provides comprehensive file validation, encryption,
+/// compression, and upload management with progress tracking.
+/// 
+/// KEY CAPABILITIES:
+/// • Multi-format support: Images, videos, audio, documents
+/// • Security validation: File type, size, and content verification
+/// • Encryption: AES-256 encryption for all uploaded content
+/// • Compression: Intelligent compression while preserving quality
+/// • Progress tracking: Real-time upload progress reporting
+/// • Error handling: Comprehensive error management with retry logic
+/// 
+/// USAGE EXAMPLE:
+/// ```dart
+/// final uploadService = MediaUploadService();
+/// final result = await uploadService.uploadFile(
+///   file: selectedFile,
+///   onProgress: (progress) => print('Upload: ${progress}%'),
+/// );
+/// ```
 class MediaUploadService {
+  /// Singleton instance for consistent service access
   static final MediaUploadService _instance = MediaUploadService._internal();
+  
+  /// Factory constructor returning the singleton instance
   factory MediaUploadService() => _instance;
+  
+  /// Private constructor for singleton pattern
   MediaUploadService._internal();
 
-  // Maximum file sizes (in bytes)
-  static const int maxImageSize = 50 * 1024 * 1024; // 50MB
-  static const int maxVideoSize = 500 * 1024 * 1024; // 500MB
-  static const int maxAudioSize = 100 * 1024 * 1024; // 100MB
-  static const int maxDocumentSize = 100 * 1024 * 1024; // 100MB
+  // ========================================================================
+  // FILE SIZE LIMITS
+  // ========================================================================
+  
+  /// Maximum allowed image file size (50MB)
+  static const int maxImageSize = 50 * 1024 * 1024;
+  
+  /// Maximum allowed video file size (500MB)
+  static const int maxVideoSize = 500 * 1024 * 1024;
+  
+  /// Maximum allowed audio file size (100MB)
+  static const int maxAudioSize = 100 * 1024 * 1024;
+  
+  /// Maximum allowed document file size (100MB)
+  static const int maxDocumentSize = 100 * 1024 * 1024;
 
-  // Allowed file extensions
+  // ========================================================================
+  // ALLOWED FILE EXTENSIONS
+  // ========================================================================
+  
+  /// Supported image file extensions
   static const List<String> allowedImageExtensions = [
     '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'
   ];
+  
+  /// Supported video file extensions
   static const List<String> allowedVideoExtensions = [
     '.mp4', '.mov', '.avi', '.mkv', '.webm', '.3gp'
   ];
+  
+  /// Supported audio file extensions
   static const List<String> allowedAudioExtensions = [
     '.mp3', '.wav', '.aac', '.m4a', '.ogg', '.opus'
   ];
