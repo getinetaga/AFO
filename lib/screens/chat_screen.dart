@@ -15,8 +15,9 @@
 /// state for the message input controller and conversation history.
 library;
 
-import 'package:flutter/material.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 
 import '../services/advanced_call_service.dart';
 import '../services/chat_service.dart';
@@ -363,7 +364,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 : FontStyle.normal,
                           ),
                         ),
-                        if (message.isEdited && message.metadata?['deleted'] != true) ..[
+                        if (message.isEdited && message.metadata?['deleted'] != true) ...[
                           const SizedBox(height: 2),
                           Text(
                             'edited',

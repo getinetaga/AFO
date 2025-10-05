@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:encrypt/encrypt.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -227,16 +227,16 @@ class MediaDownloadService {
         throw Exception('Invalid encrypted data');
       }
 
-  final key = Key.fromBase64(encryptionKey);
-  final encrypter = Encrypter(AES(key));
+  final key = encrypt.Key.fromBase64(encryptionKey);
+  final encrypter = encrypt.Encrypter(encrypt.AES(key));
       
   // Extract IV (first 16 bytes)
-  final iv = IV(encryptedData.sublist(0, 16));
+  final iv = encrypt.IV(encryptedData.sublist(0, 16));
       
   // Extract encrypted data (remaining bytes)
   final ciphertext = encryptedData.sublist(16);
-      
-  final encrypted = Encrypted(ciphertext);
+  
+  final encrypted = encrypt.Encrypted(ciphertext);
   final decrypted = encrypter.decryptBytes(encrypted, iv: iv);
       
       return Uint8List.fromList(decrypted);
