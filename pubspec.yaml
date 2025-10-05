@@ -90,18 +90,22 @@ flutter:
     - assets/icons/
     - assets/sounds/
   
-  # Fonts configuration  
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: fonts/Roboto-Regular.ttf
-        - asset: fonts/Roboto-Bold.ttf
-          weight: 700
-    - family: OromiOromoo
-      fonts:
-        - asset: fonts/OromiOromoo-Regular.ttf
-        - asset: fonts/OromiOromoo-Bold.ttf
-          weight: 700
+  # Fonts configuration
+  # NOTE: Fonts are currently not present in the repository under the `fonts/` directory.
+  # The font entries have been temporarily commented out to avoid asset not found
+  # errors during builds. Re-add these entries after placing the font files in
+  # the `fonts/` directory with exact filenames.
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: fonts/Roboto-Regular.ttf
+  #       - asset: fonts/Roboto-Bold.ttf
+  #         weight: 700
+  #   - family: OromiOromoo
+  #     fonts:
+  #       - asset: fonts/OromiOromoo-Regular.ttf
+  #       - asset: fonts/OromiOromoo-Bold.ttf
+  #         weight: 700
 
 # Platform-specific configuration
 flutter_launcher_icons:
