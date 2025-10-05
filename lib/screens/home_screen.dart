@@ -18,8 +18,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../services/auth_service.dart';
-import '../services/chat_service_new.dart';
+import '../services/chat_service.dart';
 import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {

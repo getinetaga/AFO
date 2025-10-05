@@ -27,11 +27,12 @@
 /// 
 /// This mock implementation simulates real Firebase/Socket.IO functionality
 /// for development and testing purposes.
-library;
-
 import 'dart:async';
 import 'dart:math';
+
 import 'package:encrypt/encrypt.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
+
 import 'notification_manager.dart';
 
 /// Message delivery status enumeration
@@ -63,7 +64,6 @@ enum MessageType {
   voiceNote,
 }
 
-}
 
 /// Message edit history model
 class MessageEditHistory {

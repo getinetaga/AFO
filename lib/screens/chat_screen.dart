@@ -19,7 +19,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 
 import '../services/advanced_call_service.dart';
-import '../services/chat_service_new.dart';
+import '../services/chat_service.dart';
 import '../services/media_upload_service.dart';
 import '../widgets/media_picker.dart';
 import '../widgets/media_viewers.dart';
@@ -406,6 +406,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ],
               ),
+            ),
             ),
           ),
           if (isMe) ...[

@@ -49,7 +49,7 @@ library;
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../services/chat_service_new.dart';
+import '../services/chat_service.dart';
 import '../services/media_download_service.dart';
 
 /// Professional image viewer widget with advanced zoom and pan capabilities
