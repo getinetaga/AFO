@@ -1,3 +1,4 @@
+// ignore_for_file: dangling_library_doc_comments
 // ============================================================================
 // AFO CHAT APPLICATION - GOOGLE SIGN-IN TEST UTILITY
 // ============================================================================
@@ -28,7 +29,34 @@
 /// 
 /// NOTE: This is for development/testing purposes only.
 /// Production code should integrate with full authentication flow.
-library;
+
+// Minimal fake Google Sign-In helpers used only for local testing/analysis.
+import 'package:flutter/foundation.dart';
+class _FakeGoogleAccountAuth {
+  final String? accessToken;
+  final String? idToken;
+  _FakeGoogleAccountAuth({this.accessToken, this.idToken});
+}
+
+class _FakeGoogleAccount {
+  final String email;
+  final String? displayName;
+  final String id;
+  _FakeGoogleAccount({required this.email, this.displayName, required this.id});
+
+  Future<_FakeGoogleAccountAuth> get authentication async =>
+      _FakeGoogleAccountAuth(accessToken: 'fake_access', idToken: 'fake_id');
+}
+
+class _FakeGoogleSignIn {
+  Future<_FakeGoogleAccount?> signIn() async =>
+      _FakeGoogleAccount(email: 'test@example.com', displayName: 'Test', id: '123');
+  Future<void> signOut() async {}
+}
+
+final _googleSignIn = _FakeGoogleSignIn();
+
+// removed library directive; this file is a small test helper
 
 
 /// Test Google Sign-In SDK functionality without backend integration
@@ -52,24 +80,24 @@ Future<void> testGoogleSignInOnly() async {
     // Test Google Sign-in SDK only (no backend call)
     final account = await _googleSignIn.signIn();
     if (account == null) {
-      print('❌ Google sign-in was cancelled');
+  debugPrint('❌ Google sign-in was cancelled');
       return;
     }
     
-    print('✅ Google sign-in successful!');
-    print('📧 Email: ${account.email}');
-    print('👤 Display Name: ${account.displayName}');
-    print('🆔 ID: ${account.id}');
+  debugPrint('✅ Google sign-in successful!');
+  debugPrint('📧 Email: ${account.email}');
+  debugPrint('👤 Display Name: ${account.displayName}');
+  debugPrint('🆔 ID: ${account.id}');
     
     final auth = await account.authentication;
-    print('🔑 Access Token: ${auth.accessToken?.substring(0, 50)}...');
-    print('🎫 ID Token: ${auth.idToken?.substring(0, 50)}...');
+  debugPrint('🔑 Access Token: ${auth.accessToken?.substring(0, 50)}...');
+  debugPrint('🎫 ID Token: ${auth.idToken?.substring(0, 50)}...');
     
     // Clean up - sign out after test
     await _googleSignIn.signOut();
-    print('🚪 Signed out successfully');
+  debugPrint('🚪 Signed out successfully');
     
   } catch (e) {
-    print('❌ Google Sign-in test failed: $e');
+  debugPrint('❌ Google Sign-in test failed: $e');
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/admin_models.dart';
 import '../services/admin_service.dart';
 
@@ -400,6 +401,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         color = Colors.orange;
         label = 'Suspended';
         break;
+      case UserStatus.inactive:
+        color = Colors.grey;
+        label = 'Inactive';
+        break;
+      case UserStatus.pendingVerification:
+        color = Colors.blueGrey;
+        label = 'Pending Verification';
+        break;
+      case UserStatus.deleted:
+        color = Colors.black54;
+        label = 'Deleted';
+        break;
     }
     
     return Chip(
@@ -437,6 +450,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         return Colors.red;
       case UserStatus.suspended:
         return Colors.orange;
+      case UserStatus.inactive:
+        return Colors.grey;
+      case UserStatus.pendingVerification:
+        return Colors.blueGrey;
+      case UserStatus.deleted:
+        return Colors.black54;
     }
   }
 
@@ -585,13 +604,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               _buildDetailRow('Created', _formatDateTime(user.createdAt)),
               _buildDetailRow('Last Active', user.lastActiveAt != null ? _formatDateTime(user.lastActiveAt!) : 'Never'),
               
-              if (user.metadata.isNotEmpty) ...[
+              if (user.metadata != null && user.metadata!.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Text(
                   'Additional Info:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                ...user.metadata.entries.map((entry) => 
+                ...user.metadata!.entries.map((entry) => 
                   _buildDetailRow(entry.key, entry.value.toString())),
               ],
               
@@ -613,7 +632,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -627,7 +646,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(value ?? '-'),
           ),
         ],
       ),

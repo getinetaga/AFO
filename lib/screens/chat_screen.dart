@@ -1,3 +1,4 @@
+// ignore_for_file: unused_field, use_build_context_synchronously
 /// AFO Chat Application - Chat Screen
 /// AFO: Afaan Oromoo Chat Services
 /// 

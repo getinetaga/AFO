@@ -167,7 +167,7 @@ void main() {
     testWidgets('Chat screen renders correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: ChatScreen(userId: 'test_user', userName: 'Test User'),
+          home: ChatScreen(contactId: 'test_user', contactName: 'Test User'),
         ),
       );
       await tester.pumpAndSettle();

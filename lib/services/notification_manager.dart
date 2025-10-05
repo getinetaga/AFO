@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
-import 'notification_service.dart';
+
 import '../models/notification_settings.dart';
+import 'notification_service.dart';
 
 // Notification manager handles scheduling, batching, and management of notifications
 class NotificationManager {
@@ -41,7 +43,7 @@ class NotificationManager {
     // Set up Do Not Disturb monitoring
     _setupDoNotDisturbMonitoring();
     
-    print('NotificationManager: Initialized successfully');
+  debugPrint('NotificationManager: Initialized successfully');
     return true;
   }
 
@@ -50,7 +52,7 @@ class NotificationManager {
     try {
       _settings = await NotificationSettingsManager.loadSettings();
     } catch (e) {
-      print('Failed to load notification settings: $e');
+  debugPrint('Failed to load notification settings: $e');
       _settings = NotificationSettings(); // Use defaults
     }
   }
@@ -303,7 +305,7 @@ class NotificationManager {
     final notificationId = _getNextNotificationId();
 
     // Create a summary notification
-    await _notificationService._showLocalNotification(
+    await _notificationService.showLocalNotification(
       title: title,
       body: body,
       payload: {
@@ -421,7 +423,7 @@ class NotificationManager {
       if (kDebugMode) {
         final inDnd = _settings?.isInDoNotDisturbPeriod ?? false;
         if (inDnd) {
-          print('Currently in Do Not Disturb period');
+          debugPrint('Currently in Do Not Disturb period');
         }
       }
     });
@@ -463,7 +465,7 @@ class NotificationManager {
 
   // Test notification (for debugging)
   Future<void> showTestNotification() async {
-    await _notificationService._showLocalNotification(
+    await _notificationService.showLocalNotification(
       title: 'AFO Test',
       body: 'This is a test notification',
       notificationType: NotificationType.message,
@@ -480,7 +482,7 @@ class NotificationManager {
   }) async {
     // This would require additional implementation for scheduled notifications
     // Using flutter_local_notifications scheduling features
-    print('Scheduling notification for $scheduledTime: $title');
+  debugPrint('Scheduling notification for $scheduledTime: $title');
   }
 
   // Cancel scheduled notification

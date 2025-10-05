@@ -89,6 +89,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/sounds/
+    - assets/google_logo.png
   
   # Fonts configuration
   # NOTE: Fonts are currently not present in the repository under the `fonts/` directory.

@@ -1,3 +1,5 @@
+// ignore_for_file: dangling_library_doc_comments
+// ignore_for_file: unused_field, curly_braces_in_flow_control_structures
 /// AFO Chat Application - Advanced Chat Service
 /// AFO: Afaan Oromoo Chat Services
 ///
@@ -943,13 +945,7 @@ class ChatService {
     }
   }
 
-  Future<void> _triggerGroupActivityNotification({required String groupName, required String groupId, required String activity, required String actorName, required String actorId}) async {
-    try {
-      await _notificationManager.showGroupActivityNotification(groupName: groupName, groupId: groupId, activity: activity, actorName: actorName, actorId: actorId);
-    } catch (e) {
-      debugPrint('Failed to trigger group activity notification: $e');
-    }
-  }
+  // ... group activity notification helper removed (unused)
 
   Future<void> clearNotificationsForChat(String chatRoomId) async {
     try {

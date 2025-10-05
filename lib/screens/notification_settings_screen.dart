@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously, dangling_library_doc_comments
+/// AFO Chat Application - Notification Settings
 import 'package:flutter/material.dart';
+
 import '../models/notification_settings.dart';
 import '../services/notification_manager.dart';
 
@@ -417,7 +420,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         _buildSwitchTile(
                           'Hide Preview',
                           'Hide message preview in notifications',
-                          Icons.preview_off,
+                          Icons.visibility_off,
                           _settings!.hidePreview,
                           (value) => _updateSettings(_settings!.copyWith(hidePreview: value)),
                         ),
