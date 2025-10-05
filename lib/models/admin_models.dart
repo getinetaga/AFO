@@ -322,7 +322,7 @@ class AdminUser {
     this.reportCount = 0,
     this.isVerified = false,
     this.phoneNumber,
-    this.location,
+    this.location, required id, required avatarUrl, required DateTime lastLoginAt,
   });
 
   /// Check if admin user has specific permission
@@ -472,11 +472,11 @@ class AdminUser {
       reportCount: json['reportCount'] ?? 0,
       isVerified: json['isVerified'] ?? false,
       phoneNumber: json['phoneNumber'],
-      location: json['location'],
+      location: json['location'], userId: '',
     );
   }
 
-  AdminUser copyWith({
+  Future<AdminUser> copyWith({
     String? id,
     String? username,
     String? email,
@@ -495,7 +495,7 @@ class AdminUser {
     bool? isVerified,
     String? phoneNumber,
     String? location,
-  }) {
+  }) async {
     return AdminUser(
       id: id ?? this.id,
       username: username ?? this.username,
@@ -517,6 +517,9 @@ class AdminUser {
       location: location ?? this.location,
     );
   }
+}
+
+mixin lastLoginAt {
 }
 
 // Admin group model

@@ -54,6 +54,8 @@ import 'package:path/path.dart' as path;
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 
+import 'chat_service_new.dart';
+
 /// Professional media upload service with security and optimization
 /// 
 /// Singleton service that handles all media upload operations for the AFO

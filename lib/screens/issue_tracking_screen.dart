@@ -843,3 +843,6 @@ class _IssueTrackingScreenState extends State<IssueTrackingScreen> with TickerPr
     super.dispose();
   }
 }
+
+class ContentReport {
+}
