@@ -1,23 +1,22 @@
 
 
-/**
- * AFO Chat Application - Profile Screen
- * AFO: Afaan Oromoo Chat Services
- * 
- * This screen provides user profile management for AFO chat application users,
- * serving the Afaan Oromoo community with personalized settings. Features include:
- * 
- * - User profile information display with avatar and personal details
- * - Account settings and preferences management
- * - Security options including password change functionality
- * - Notification and privacy settings configuration
- * - Professional UI consistent with AFO design language
- * - Integration with AuthService for user data management
- * - Logout functionality with secure session termination
- * 
- * The screen integrates with AuthService through Provider for
- * user authentication and profile data management.
- */
+/// AFO Chat Application - Profile Screen
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This screen provides user profile management for AFO chat application users,
+/// serving the Afaan Oromoo community with personalized settings. Features include:
+/// 
+/// - User profile information display with avatar and personal details
+/// - Account settings and preferences management
+/// - Security options including password change functionality
+/// - Notification and privacy settings configuration
+/// - Professional UI consistent with AFO design language
+/// - Integration with AuthService for user data management
+/// - Logout functionality with secure session termination
+/// 
+/// The screen integrates with AuthService through Provider for
+/// user authentication and profile data management.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

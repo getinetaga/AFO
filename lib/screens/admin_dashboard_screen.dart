@@ -28,6 +28,8 @@
 ///   ),
 /// );
 /// ```
+library;
+
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -49,7 +51,7 @@ import 'issue_tracking_screen.dart';
 /// • Automatic data refresh and streaming updates
 class AdminDashboardScreen extends StatefulWidget {
   /// Creates an instance of AdminDashboardScreen
-  const AdminDashboardScreen({Key? key}) : super(key: key);
+  const AdminDashboardScreen({super.key});
 
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();

@@ -45,13 +45,14 @@
 /// • Error handling with retry mechanisms
 /// • Memory-efficient processing for large files
 /// • Platform-specific optimizations
+library;
+
 
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
-import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 
 import 'chat_service_new.dart';
@@ -538,7 +539,7 @@ class MediaUploadResult {
   String? get formattedFileSize {
     if (fileSize == null) return null;
     
-    if (fileSize! < 1024) return '${fileSize} B';
+    if (fileSize! < 1024) return '$fileSize B';
     if (fileSize! < 1024 * 1024) return '${(fileSize! / 1024).toStringAsFixed(1)} KB';
     if (fileSize! < 1024 * 1024 * 1024) return '${(fileSize! / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(fileSize! / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';

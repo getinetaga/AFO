@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'chat_service_new.dart';
 
@@ -492,7 +490,7 @@ class MediaDownloadResult {
   String? get formattedFileSize {
     if (fileSize == null) return null;
     
-    if (fileSize! < 1024) return '${fileSize} B';
+    if (fileSize! < 1024) return '$fileSize B';
     if (fileSize! < 1024 * 1024) return '${(fileSize! / 1024).toStringAsFixed(1)} KB';
     if (fileSize! < 1024 * 1024 * 1024) return '${(fileSize! / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(fileSize! / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
@@ -521,7 +519,7 @@ class CacheStatistics {
 
   /// Formatted total size
   String get formattedTotalSize {
-    if (totalSizeBytes < 1024) return '${totalSizeBytes} B';
+    if (totalSizeBytes < 1024) return '$totalSizeBytes B';
     if (totalSizeBytes < 1024 * 1024) return '${(totalSizeBytes / 1024).toStringAsFixed(1)} KB';
     if (totalSizeBytes < 1024 * 1024 * 1024) return '${(totalSizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(totalSizeBytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
@@ -529,7 +527,7 @@ class CacheStatistics {
 
   /// Formatted max size
   String get formattedMaxSize {
-    if (maxSizeBytes < 1024) return '${maxSizeBytes} B';
+    if (maxSizeBytes < 1024) return '$maxSizeBytes B';
     if (maxSizeBytes < 1024 * 1024) return '${(maxSizeBytes / 1024).toStringAsFixed(1)} KB';
     if (maxSizeBytes < 1024 * 1024 * 1024) return '${(maxSizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(maxSizeBytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';

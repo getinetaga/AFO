@@ -13,7 +13,6 @@
 // - Audit trail and action logging
 // ============================================================================
 
-import 'package:flutter/material.dart';
 
 // ============================================================================
 // ROLE-BASED ACCESS CONTROL (RBAC) SYSTEM
@@ -926,7 +925,7 @@ class ModerationAction {
     };
   }
 
-  factory ContentReport.fromJson(Map<String, dynamic> json) {
+  ContentReport.fromJson(Map<String, dynamic> json) {
     return ContentReport(
       id: json['id'],
       reporterId: json['reporterId'],

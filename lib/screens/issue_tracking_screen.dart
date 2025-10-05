@@ -3,7 +3,7 @@ import '../models/admin_models.dart';
 import '../services/admin_service.dart';
 
 class IssueTrackingScreen extends StatefulWidget {
-  const IssueTrackingScreen({Key? key}) : super(key: key);
+  const IssueTrackingScreen({super.key});
 
   @override
   State<IssueTrackingScreen> createState() => _IssueTrackingScreenState();

@@ -45,11 +45,12 @@
 /// • Privacy-preserving message previews
 /// • Secure token management for push notifications
 /// • User consent and opt-out mechanisms
+library;
+
 
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';

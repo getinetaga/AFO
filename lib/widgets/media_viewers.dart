@@ -44,10 +44,11 @@
 ///   showControls: true,
 /// )
 /// ```
+library;
+
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../services/chat_service_new.dart';
 import '../services/media_download_service.dart';
 
@@ -95,11 +96,11 @@ class ImageViewerWidget extends StatefulWidget {
   /// - [localFile]: Optional cached file for offline viewing
   /// - [onDownload]: Optional callback for download handling
   const ImageViewerWidget({
-    Key? key,
+    super.key,
     required this.mediaAttachment,
     this.localFile,
     this.onDownload,
-  }) : super(key: key);
+  });
 
   @override
   State<ImageViewerWidget> createState() => _ImageViewerWidgetState();
@@ -339,11 +340,11 @@ class VideoPlayerWidget extends StatefulWidget {
 
   /// Creates a VideoPlayerWidget with required media attachment
   const VideoPlayerWidget({
-    Key? key,
+    super.key,
     required this.mediaAttachment,
     this.localFile,
     this.onDownload,
-  }) : super(key: key);
+  });
 
   @override
   State<VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
@@ -368,10 +369,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   String? _error;
   
   /// Current playback position
-  Duration _position = Duration.zero;
+  final Duration _position = Duration.zero;
   
   /// Total video duration
-  Duration _duration = Duration.zero;
+  final Duration _duration = Duration.zero;
 
   /// Initialize video loading and player setup
   /// 
@@ -645,11 +646,11 @@ class AudioPlayerWidget extends StatefulWidget {
 
   /// Creates an AudioPlayerWidget with required media attachment
   const AudioPlayerWidget({
-    Key? key,
+    super.key,
     required this.mediaAttachment,
     this.localFile,
     this.onDownload,
-  }) : super(key: key);
+  });
 
   @override
   State<AudioPlayerWidget> createState() => _AudioPlayerWidgetState();
@@ -675,7 +676,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   String? _error;
   
   /// Current playback position
-  Duration _position = Duration.zero;
+  final Duration _position = Duration.zero;
   
   /// Total audio duration
   Duration _duration = Duration.zero;
@@ -987,11 +988,11 @@ class DocumentViewerWidget extends StatefulWidget {
 
   /// Creates a DocumentViewerWidget with required media attachment
   const DocumentViewerWidget({
-    Key? key,
+    super.key,
     required this.mediaAttachment,
     this.localFile,
     this.onDownload,
-  }) : super(key: key);
+  });
 
   @override
   State<DocumentViewerWidget> createState() => _DocumentViewerWidgetState();
