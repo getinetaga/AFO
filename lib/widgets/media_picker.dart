@@ -41,8 +41,10 @@ library;
 
 
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import '../services/chat_service_new.dart';
+
+import '../services/chat_service.dart';
 
 /// Professional media picker widget with animations and comprehensive options
 /// 

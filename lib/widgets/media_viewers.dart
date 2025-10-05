@@ -44,11 +44,11 @@
 ///   showControls: true,
 /// )
 /// ```
-library;
-
-
 import 'dart:io';
+import 'dart:math' as Math;
+
 import 'package:flutter/material.dart';
+
 import '../services/chat_service.dart';
 import '../services/media_download_service.dart';
 
@@ -1232,5 +1232,4 @@ class WaveformPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Import required for Math.sin
-import 'dart:math' as Math;
+// Import required for Math.sin (moved to top imports)

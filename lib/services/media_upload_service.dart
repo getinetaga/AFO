@@ -49,13 +49,14 @@ library;
 
 
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
-import 'package:encrypt/encrypt.dart';
 
-import 'chat_service_new.dart';
+import 'chat_service.dart';
 
 /// Professional media upload service with security and optimization
 /// 
@@ -288,9 +289,9 @@ class MediaUploadService {
   /// Encrypt file data
   Future<Uint8List> encryptFileData(Uint8List fileData, String encryptionKey) async {
     try {
-      final key = Key.fromBase64(encryptionKey);
-      final iv = IV.fromSecureRandom(16);
-      final encrypter = Encrypter(AES(key));
+  final key = encrypt.Key.fromBase64(encryptionKey);
+  final iv = encrypt.IV.fromSecureRandom(16);
+  final encrypter = encrypt.Encrypter(encrypt.AES(key));
       
       final encrypted = encrypter.encryptBytes(fileData, iv: iv);
       
@@ -442,7 +443,7 @@ class MediaUploadService {
   String _generateEncryptionKey() {
     final random = Random.secure();
     final bytes = List<int>.generate(32, (i) => random.nextInt(256));
-    return Key.fromBase64(bytes.toString()).base64;
+  return encrypt.Key.fromBase64(bytes.toString()).base64;
   }
 
   /// Get MIME type from file path

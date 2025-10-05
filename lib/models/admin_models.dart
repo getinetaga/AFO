@@ -1,3 +1,8 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+
 // ============================================================================
 // AFO Chat Application - Admin System Models
 // ============================================================================
@@ -862,8 +867,137 @@ class ModerationAction {
       metadata: json['metadata'] ?? {},
     );
   }
+
+  ModerationAction copyWith({
+    String? actionId,
+    String? adminId,
+    String? adminName,
+    String? targetUserId,
+    String? targetUserName,
+    String? actionType,
+    String? reason,
+    DateTime? timestamp,
+    Duration? duration,
+    String? contentId,
+    String? details,
+    bool? isAutomated,
+    ModerationSeverity? severity,
+    String? relatedReportId,
+    Map<String, dynamic>? metadata,
+  }) {
+    return ModerationAction(
+      actionId: actionId ?? this.actionId,
+      adminId: adminId ?? this.adminId,
+      adminName: adminName ?? this.adminName,
+      targetUserId: targetUserId ?? this.targetUserId,
+      targetUserName: targetUserName ?? this.targetUserName,
+      actionType: actionType ?? this.actionType,
+      reason: reason ?? this.reason,
+      timestamp: timestamp ?? this.timestamp,
+      duration: duration ?? this.duration,
+      contentId: contentId ?? this.contentId,
+      details: details ?? this.details,
+      isAutomated: isAutomated ?? this.isAutomated,
+      severity: severity ?? this.severity,
+      relatedReportId: relatedReportId ?? this.relatedReportId,
+      metadata: metadata ?? this.metadata,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'actionId': actionId,
+      'adminId': adminId,
+      'adminName': adminName,
+      'targetUserId': targetUserId,
+      'targetUserName': targetUserName,
+      'actionType': actionType,
+      'reason': reason,
+      'timestamp': timestamp.millisecondsSinceEpoch,
+      'duration': duration?.toMap(),
+      'contentId': contentId,
+      'details': details,
+      'isAutomated': isAutomated,
+      'severity': severity.toMap(),
+      'relatedReportId': relatedReportId,
+      'metadata': metadata,
+    };
+  }
+
+  factory ModerationAction.fromMap(Map<String, dynamic> map) {
+    return ModerationAction(
+      actionId: map['actionId'] as String,
+      adminId: map['adminId'] as String,
+      adminName: map['adminName'] as String,
+      targetUserId: map['targetUserId'] as String,
+      targetUserName: map['targetUserName'] != null ? map['targetUserName'] as String : null,
+      actionType: map['actionType'] as String,
+      reason: map['reason'] as String,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int),
+      duration: map['duration'] != null ? Duration.fromMap(map['duration'] as Map<String,dynamic>) : null,
+      contentId: map['contentId'] != null ? map['contentId'] as String : null,
+      details: map['details'] as String,
+      isAutomated: map['isAutomated'] as bool,
+      severity: ModerationSeverity.fromMap(map['severity'] as Map<String,dynamic>),
+      relatedReportId: map['relatedReportId'] != null ? map['relatedReportId'] as String : null,
+      metadata: Map<String, dynamic>.from((map['metadata'] as Map<String, dynamic>),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory ModerationAction.fromJson(String source) => ModerationAction.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  @override
+  String toString() {
+    return 'ModerationAction(actionId: $actionId, adminId: $adminId, adminName: $adminName, targetUserId: $targetUserId, targetUserName: $targetUserName, actionType: $actionType, reason: $reason, timestamp: $timestamp, duration: $duration, contentId: $contentId, details: $details, isAutomated: $isAutomated, severity: $severity, relatedReportId: $relatedReportId, metadata: $metadata)';
+  }
+
+  @override
+  bool operator ==(covariant ModerationAction other) {
+    if (identical(this, other)) return true;
+  
+    return 
+      other.actionId == actionId &&
+      other.adminId == adminId &&
+      other.adminName == adminName &&
+      other.targetUserId == targetUserId &&
+      other.targetUserName == targetUserName &&
+      other.actionType == actionType &&
+      other.reason == reason &&
+      other.timestamp == timestamp &&
+      other.duration == duration &&
+      other.contentId == contentId &&
+      other.details == details &&
+      other.isAutomated == isAutomated &&
+      other.severity == severity &&
+      other.relatedReportId == relatedReportId &&
+      mapEquals(other.metadata, metadata);
+  }
+
+  @override
+  int get hashCode {
+    return actionId.hashCode ^
+      adminId.hashCode ^
+      adminName.hashCode ^
+      targetUserId.hashCode ^
+      targetUserName.hashCode ^
+      actionType.hashCode ^
+      reason.hashCode ^
+      timestamp.hashCode ^
+      duration.hashCode ^
+      contentId.hashCode ^
+      details.hashCode ^
+      isAutomated.hashCode ^
+      severity.hashCode ^
+      relatedReportId.hashCode ^
+      metadata.hashCode;
+  }
 }
-  final String? targetUserName;
+
+class ModerationSeverity {
+}
+ final String? targetUserName;
   final String? messageId;
   final String? groupId;
   final ReportType type;
