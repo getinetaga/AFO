@@ -1,24 +1,23 @@
-/**
- * AFO Chat Application - Call Screen
- * AFO: Afaan Oromoo Chat Services
- * 
- * This screen provides comprehensive voice and video calling functionality for users
- * in the Afaan Oromoo community. Features include:
- * 
- * - Professional calling interface with user information display
- * - Voice and video call support with dynamic UI based on call type
- * - Top navigation with back button and camera switch controls
- * - Call controls: mute, speaker, end call, camera toggle
- * - Real-time call duration tracking and display
- * - Interactive control buttons with visual feedback
- * - Mock implementation using CallService (replaces Agora RTC Engine)
- * - Professional dark theme optimized for calling interface
- * - Comprehensive error handling and status management
- * 
- * The screen uses CallService for call management and maintains
- * state for call duration, control states, and call status.
- * Combines the best features from multiple implementation approaches.
- */
+/// AFO Chat Application - Call Screen
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This screen provides comprehensive voice and video calling functionality for users
+/// in the Afaan Oromoo community. Features include:
+/// 
+/// - Professional calling interface with user information display
+/// - Voice and video call support with dynamic UI based on call type
+/// - Top navigation with back button and camera switch controls
+/// - Call controls: mute, speaker, end call, camera toggle
+/// - Real-time call duration tracking and display
+/// - Interactive control buttons with visual feedback
+/// - Mock implementation using CallService (replaces Agora RTC Engine)
+/// - Professional dark theme optimized for calling interface
+/// - Comprehensive error handling and status management
+/// 
+/// The screen uses CallService for call management and maintains
+/// state for call duration, control states, and call status.
+/// Combines the best features from multiple implementation approaches.
+library;
 
 import 'package:flutter/material.dart';
 

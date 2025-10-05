@@ -1,21 +1,20 @@
-/**
- * AFO Chat Application - Registration Screen
- * AFO: Afaan Oromoo Chat Services
- * 
- * This screen handles user registration for the AFO chat application,
- * welcoming new members to the Afaan Oromoo community. Features include:
- * 
- * - Professional registration form with comprehensive validation
- * - Email, password, and confirm password fields with real-time validation
- * - Form submission with proper error handling and loading states
- * - Integration with AuthService for account creation
- * - Navigation to login screen for existing users
- * - Professional blue theme consistent with AFO branding
- * - Responsive design with proper keyboard handling
- * 
- * The screen uses Form widgets for validation and integrates with
- * AuthService through Provider for user account creation.
- */
+/// AFO Chat Application - Registration Screen
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This screen handles user registration for the AFO chat application,
+/// welcoming new members to the Afaan Oromoo community. Features include:
+/// 
+/// - Professional registration form with comprehensive validation
+/// - Email, password, and confirm password fields with real-time validation
+/// - Form submission with proper error handling and loading states
+/// - Integration with AuthService for account creation
+/// - Navigation to login screen for existing users
+/// - Professional blue theme consistent with AFO branding
+/// - Responsive design with proper keyboard handling
+/// 
+/// The screen uses Form widgets for validation and integrates with
+/// AuthService through Provider for user account creation.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

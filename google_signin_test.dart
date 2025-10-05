@@ -28,6 +28,8 @@
 /// 
 /// NOTE: This is for development/testing purposes only.
 /// Production code should integrate with full authentication flow.
+library;
+
 
 /// Test Google Sign-In SDK functionality without backend integration
 /// 

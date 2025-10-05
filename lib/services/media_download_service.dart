@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:convert';
+
+import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:crypto/crypto.dart';
-import 'package:encrypt/encrypt.dart';
-import 'chat_service_new.dart';
+
+import 'chat_service.dart';
 
 /// Media download service for handling secure file downloads with caching
 class MediaDownloadService {
@@ -227,17 +227,17 @@ class MediaDownloadService {
         throw Exception('Invalid encrypted data');
       }
 
-      final key = Key.fromBase64(encryptionKey);
-      final encrypter = Encrypter(AES(key));
+  final key = encrypt.Key.fromBase64(encryptionKey);
+  final encrypter = encrypt.Encrypter(encrypt.AES(key));
       
-      // Extract IV (first 16 bytes)
-      final iv = IV(encryptedData.sublist(0, 16));
+  // Extract IV (first 16 bytes)
+  final iv = encrypt.IV(encryptedData.sublist(0, 16));
       
-      // Extract encrypted data (remaining bytes)
-      final ciphertext = encryptedData.sublist(16);
-      
-      final encrypted = Encrypted(ciphertext);
-      final decrypted = encrypter.decryptBytes(encrypted, iv: iv);
+  // Extract encrypted data (remaining bytes)
+  final ciphertext = encryptedData.sublist(16);
+  
+  final encrypted = encrypt.Encrypted(ciphertext);
+  final decrypted = encrypter.decryptBytes(encrypted, iv: iv);
       
       return Uint8List.fromList(decrypted);
     } catch (e) {
@@ -492,7 +492,7 @@ class MediaDownloadResult {
   String? get formattedFileSize {
     if (fileSize == null) return null;
     
-    if (fileSize! < 1024) return '${fileSize} B';
+    if (fileSize! < 1024) return '$fileSize B';
     if (fileSize! < 1024 * 1024) return '${(fileSize! / 1024).toStringAsFixed(1)} KB';
     if (fileSize! < 1024 * 1024 * 1024) return '${(fileSize! / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(fileSize! / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
@@ -521,7 +521,7 @@ class CacheStatistics {
 
   /// Formatted total size
   String get formattedTotalSize {
-    if (totalSizeBytes < 1024) return '${totalSizeBytes} B';
+    if (totalSizeBytes < 1024) return '$totalSizeBytes B';
     if (totalSizeBytes < 1024 * 1024) return '${(totalSizeBytes / 1024).toStringAsFixed(1)} KB';
     if (totalSizeBytes < 1024 * 1024 * 1024) return '${(totalSizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(totalSizeBytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
@@ -529,7 +529,7 @@ class CacheStatistics {
 
   /// Formatted max size
   String get formattedMaxSize {
-    if (maxSizeBytes < 1024) return '${maxSizeBytes} B';
+    if (maxSizeBytes < 1024) return '$maxSizeBytes B';
     if (maxSizeBytes < 1024 * 1024) return '${(maxSizeBytes / 1024).toStringAsFixed(1)} KB';
     if (maxSizeBytes < 1024 * 1024 * 1024) return '${(maxSizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(maxSizeBytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';

@@ -3,7 +3,7 @@ import '../models/admin_models.dart';
 import '../services/admin_service.dart';
 
 class UserManagementScreen extends StatefulWidget {
-  const UserManagementScreen({Key? key}) : super(key: key);
+  const UserManagementScreen({super.key});
 
   @override
   State<UserManagementScreen> createState() => _UserManagementScreenState();
@@ -148,8 +148,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateUserDialog,
         backgroundColor: Colors.indigo,
-        child: const Icon(Icons.person_add, color: Colors.white),
         tooltip: 'Add User',
+        child: const Icon(Icons.person_add, color: Colors.white),
       ),
     );
   }

@@ -1,21 +1,20 @@
-/**
- * AFO Chat Application - Google Sign-In Test Screen
- * AFO: Afaan Oromoo Chat Services
- * 
- * This screen provides Google Sign-In testing functionality for the AFO
- * chat application, facilitating authentication testing for the Afaan Oromoo 
- * community platform. Features include:
- * 
- * - Google Sign-In integration testing and validation
- * - Authentication flow debugging and error handling
- * - User account information display after successful sign-in
- * - Professional testing interface with clear status indicators
- * - Integration with AuthService for Google authentication
- * - Development and testing support for OAuth implementation
- * 
- * This screen is primarily used for development and testing purposes
- * to ensure proper Google authentication integration in the AFO platform.
- */
+/// AFO Chat Application - Google Sign-In Test Screen
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This screen provides Google Sign-In testing functionality for the AFO
+/// chat application, facilitating authentication testing for the Afaan Oromoo 
+/// community platform. Features include:
+/// 
+/// - Google Sign-In integration testing and validation
+/// - Authentication flow debugging and error handling
+/// - User account information display after successful sign-in
+/// - Professional testing interface with clear status indicators
+/// - Integration with AuthService for Google authentication
+/// - Development and testing support for OAuth implementation
+/// 
+/// This screen is primarily used for development and testing purposes
+/// to ensure proper Google authentication integration in the AFO platform.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

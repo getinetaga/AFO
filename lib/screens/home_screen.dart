@@ -1,26 +1,26 @@
-/**
- * AFO Chat Application - Home Screen (Main Chat List)
- * AFO: Afaan Oromoo Chat Services
- * 
- * This screen serves as the primary chat dashboard for the AFO application,
- * designed specifically for the Afaan Oromoo community. Features include:
- * 
- * - Comprehensive chat list with recent conversations
- * - Professional chat item UI with contact avatars and message previews
- * - Real-time message timestamps and read status indicators
- * - User profile integration with authentication status
- * - Navigation to individual chat conversations
- * - Settings and logout functionality through popup menu
- * - Professional blue theme consistent with AFO branding
- * 
- * The screen integrates with AuthService for user management
- * and provides navigation to ChatScreen for individual conversations.
- */
+/// AFO Chat Application - Home Screen (Main Chat List)
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This screen serves as the primary chat dashboard for the AFO application,
+/// designed specifically for the Afaan Oromoo community. Features include:
+/// 
+/// - Comprehensive chat list with recent conversations
+/// - Professional chat item UI with contact avatars and message previews
+/// - Real-time message timestamps and read status indicators
+/// - User profile integration with authentication status
+/// - Navigation to individual chat conversations
+/// - Settings and logout functionality through popup menu
+/// - Professional blue theme consistent with AFO branding
+/// 
+/// The screen integrates with AuthService for user management
+/// and provides navigation to ChatScreen for individual conversations.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../services/auth_service.dart';
-import '../services/chat_service_new.dart';
+import '../services/chat_service.dart';
 import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {

@@ -252,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               elevation: 2,
                             ),
-                            icon: Container(
+                            icon: SizedBox(
                               width: 20,
                               height: 20,
                               child: Image.asset(

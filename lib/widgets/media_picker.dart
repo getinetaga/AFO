@@ -37,12 +37,14 @@
 /// 
 /// The widget appears as an animated overlay with media options
 /// and handles all the complexity of media selection and validation.
+library;
+
 
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import '../services/chat_service_new.dart';
-import '../services/media_upload_service.dart';
+
+import '../services/chat_service.dart';
 
 /// Professional media picker widget with animations and comprehensive options
 /// 
@@ -69,10 +71,10 @@ class MediaPickerWidget extends StatefulWidget {
   /// - [onMediaSelected]: Required callback for handling selected media
   /// - [onCancel]: Optional callback for handling picker cancellation
   const MediaPickerWidget({
-    Key? key,
+    super.key,
     required this.onMediaSelected,
     this.onCancel,
-  }) : super(key: key);
+  });
 
   @override
   State<MediaPickerWidget> createState() => _MediaPickerWidgetState();
@@ -629,11 +631,11 @@ class MediaUploadProgressWidget extends StatefulWidget {
   final VoidCallback? onCancel;
 
   const MediaUploadProgressWidget({
-    Key? key,
+    super.key,
     required this.fileName,
     required this.progressNotifier,
     this.onCancel,
-  }) : super(key: key);
+  });
 
   @override
   State<MediaUploadProgressWidget> createState() => _MediaUploadProgressWidgetState();
@@ -720,9 +722,9 @@ class MediaSelectionSheet extends StatelessWidget {
   final Function(File, MessageType) onMediaSelected;
 
   const MediaSelectionSheet({
-    Key? key,
+    super.key,
     required this.onMediaSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

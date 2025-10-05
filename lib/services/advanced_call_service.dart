@@ -1,41 +1,40 @@
-/**
- * AFO Chat Application - Advanced Call Service
- * AFO: Afaan Oromoo Chat Services
- * 
- * This comprehensive call service provides enterprise-grade voice and video calling 
- * functionality for the AFO chat application, designed specifically for the 
- * Afaan Oromoo community. Features include:
- * 
- * CORE CALLING FEATURES:
- * - Voice and video calls with minimal latency optimization
- * - Real-time peer-to-peer communication simulation
- * - Advanced connection management and reconnection logic
- * - Call quality monitoring and adaptive bitrate adjustment
- * - Network condition monitoring and optimization
- * 
- * ADVANCED FEATURES:
- * - Multi-participant group calls (up to 8 participants)
- * - Screen sharing capabilities for collaboration
- * - Recording functionality with quality selection
- * - Advanced audio/video controls and effects
- * - Bandwidth optimization and quality adjustment
- * 
- * LATENCY OPTIMIZATION:
- * - Connection pre-warming and keep-alive mechanisms
- * - Adaptive codec selection based on network conditions
- * - Jitter buffer management for smooth audio/video
- * - Priority packet handling for real-time communication
- * - Edge server selection for minimal routing delay
- * 
- * RELIABILITY FEATURES:
- * - Automatic reconnection with exponential backoff
- * - Call persistence across app lifecycle changes
- * - Network change detection and adaptation
- * - Comprehensive error handling and recovery
- * 
- * This implementation simulates WebRTC/Agora functionality for development
- * and can be easily adapted for production with real P2P services.
- */
+/// AFO Chat Application - Advanced Call Service
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This comprehensive call service provides enterprise-grade voice and video calling 
+/// functionality for the AFO chat application, designed specifically for the 
+/// Afaan Oromoo community. Features include:
+/// 
+/// CORE CALLING FEATURES:
+/// - Voice and video calls with minimal latency optimization
+/// - Real-time peer-to-peer communication simulation
+/// - Advanced connection management and reconnection logic
+/// - Call quality monitoring and adaptive bitrate adjustment
+/// - Network condition monitoring and optimization
+/// 
+/// ADVANCED FEATURES:
+/// - Multi-participant group calls (up to 8 participants)
+/// - Screen sharing capabilities for collaboration
+/// - Recording functionality with quality selection
+/// - Advanced audio/video controls and effects
+/// - Bandwidth optimization and quality adjustment
+/// 
+/// LATENCY OPTIMIZATION:
+/// - Connection pre-warming and keep-alive mechanisms
+/// - Adaptive codec selection based on network conditions
+/// - Jitter buffer management for smooth audio/video
+/// - Priority packet handling for real-time communication
+/// - Edge server selection for minimal routing delay
+/// 
+/// RELIABILITY FEATURES:
+/// - Automatic reconnection with exponential backoff
+/// - Call persistence across app lifecycle changes
+/// - Network change detection and adaptation
+/// - Comprehensive error handling and recovery
+/// 
+/// This implementation simulates WebRTC/Agora functionality for development
+/// and can be easily adapted for production with real P2P services.
+library;
 
 import 'dart:async';
 import 'dart:math';
@@ -245,33 +244,27 @@ class AdvancedCallService {
   static const int _maxReconnectAttempts = 5;
   Timer? _reconnectTimer;
 
-  /**
-   * Initialize Service
-   * 
-   * Sets up the call service with connection pre-warming and network monitoring.
-   */
+  /// Initialize Service
+  /// 
+  /// Sets up the call service with connection pre-warming and network monitoring.
   void _initializeService() {
     _startNetworkMonitoring();
     _startKeepAlive();
     debugPrint('🔧 Advanced Call Service initialized with low-latency optimizations');
   }
 
-  /**
-   * Network Monitoring
-   * 
-   * Continuously monitors network conditions for optimal call quality.
-   */
+  /// Network Monitoring
+  /// 
+  /// Continuously monitors network conditions for optimal call quality.
   void _startNetworkMonitoring() {
     _networkMonitorTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _updateNetworkCondition();
     });
   }
 
-  /**
-   * Keep-Alive Mechanism
-   * 
-   * Maintains connection readiness to minimize call setup latency.
-   */
+  /// Keep-Alive Mechanism
+  /// 
+  /// Maintains connection readiness to minimize call setup latency.
   void _startKeepAlive() {
     _keepAliveTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
       _sendKeepAlive();
@@ -296,22 +289,18 @@ class AdvancedCallService {
   Stream<CallStats> get statsStream => _statsController.stream;
   Stream<List<CallParticipant>> get participantsStream => _participantsController.stream;
 
-  /**
-   * Set Current User
-   * 
-   * Sets the current authenticated user for call operations.
-   */
+  /// Set Current User
+  /// 
+  /// Sets the current authenticated user for call operations.
   void setCurrentUser(String userId, [String? userName]) {
     _currentUserId = userId;
     _currentUserName = userName ?? 'User';
     debugPrint('👤 Call service user set: $_currentUserName');
   }
 
-  /**
-   * Request Permissions
-   * 
-   * Requests microphone and camera permissions with enhanced error handling.
-   */
+  /// Request Permissions
+  /// 
+  /// Requests microphone and camera permissions with enhanced error handling.
   Future<bool> requestPermissions({required bool isVideo}) async {
     debugPrint('📱 Requesting ${isVideo ? 'camera and microphone' : 'microphone'} permissions...');
     
@@ -330,11 +319,9 @@ class AdvancedCallService {
     return granted;
   }
 
-  /**
-   * Start Call
-   * 
-   * Initiates a call with advanced setup and latency optimization.
-   */
+  /// Start Call
+  /// 
+  /// Initiates a call with advanced setup and latency optimization.
   Future<void> startCall({
     required String remoteUserId,
     required String remoteUserName,
@@ -419,11 +406,9 @@ class AdvancedCallService {
     }
   }
 
-  /**
-   * Start Group Call
-   * 
-   * Initiates a group call with multiple participants.
-   */
+  /// Start Group Call
+  /// 
+  /// Initiates a group call with multiple participants.
   Future<void> startGroupCall({
     required List<String> participantIds,
     required Map<String, String> participantNames,
@@ -498,11 +483,9 @@ class AdvancedCallService {
     }
   }
 
-  /**
-   * End Call
-   * 
-   * Terminates the current call with proper cleanup.
-   */
+  /// End Call
+  /// 
+  /// Terminates the current call with proper cleanup.
   Future<void> endCall() async {
     if (_status == CallStatus.idle) return;
 
@@ -529,22 +512,18 @@ class AdvancedCallService {
     debugPrint('✅ Call ended successfully');
   }
 
-  /**
-   * Toggle Audio Mute
-   * 
-   * Toggles microphone mute with immediate feedback.
-   */
+  /// Toggle Audio Mute
+  /// 
+  /// Toggles microphone mute with immediate feedback.
   Future<void> toggleAudioMute() async {
     _isAudioMuted = !_isAudioMuted;
     await _updateLocalAudioState();
     debugPrint('🔇 Audio ${_isAudioMuted ? 'muted' : 'unmuted'}');
   }
 
-  /**
-   * Toggle Video
-   * 
-   * Toggles camera on/off for video calls.
-   */
+  /// Toggle Video
+  /// 
+  /// Toggles camera on/off for video calls.
   Future<void> toggleVideo() async {
     if (!_isVideoCall(_currentCall?.type ?? CallType.voice)) return;
     
@@ -553,22 +532,18 @@ class AdvancedCallService {
     debugPrint('📹 Video ${_isVideoEnabled ? 'enabled' : 'disabled'}');
   }
 
-  /**
-   * Toggle Speaker
-   * 
-   * Toggles between speaker and earpiece audio output.
-   */
+  /// Toggle Speaker
+  /// 
+  /// Toggles between speaker and earpiece audio output.
   Future<void> toggleSpeaker() async {
     _isSpeakerOn = !_isSpeakerOn;
     await _updateAudioOutput();
     debugPrint('🔊 Speaker ${_isSpeakerOn ? 'on' : 'off'}');
   }
 
-  /**
-   * Switch Camera
-   * 
-   * Switches between front and back camera.
-   */
+  /// Switch Camera
+  /// 
+  /// Switches between front and back camera.
   Future<void> switchCamera() async {
     if (!_isVideoCall(_currentCall?.type ?? CallType.voice)) return;
     
@@ -577,11 +552,9 @@ class AdvancedCallService {
     debugPrint('📷 Switched to ${_isFrontCamera ? 'front' : 'back'} camera');
   }
 
-  /**
-   * Adjust Call Quality
-   * 
-   * Dynamically adjusts call quality based on network conditions.
-   */
+  /// Adjust Call Quality
+  /// 
+  /// Dynamically adjusts call quality based on network conditions.
   Future<void> adjustCallQuality(CallQuality quality) async {
     if (_status != CallStatus.connected) return;
     
@@ -596,11 +569,9 @@ class AdvancedCallService {
     debugPrint('📊 Call quality adjusted to ${quality.name}');
   }
 
-  /**
-   * Start Screen Sharing
-   * 
-   * Initiates screen sharing functionality.
-   */
+  /// Start Screen Sharing
+  /// 
+  /// Initiates screen sharing functionality.
   Future<void> startScreenSharing() async {
     if (_status != CallStatus.connected) return;
     
@@ -614,11 +585,9 @@ class AdvancedCallService {
     debugPrint('🖥️ Screen sharing started');
   }
 
-  /**
-   * Stop Screen Sharing
-   * 
-   * Stops screen sharing functionality.
-   */
+  /// Stop Screen Sharing
+  /// 
+  /// Stops screen sharing functionality.
   Future<void> stopScreenSharing() async {
     if (_currentCall?.isScreenSharing != true) return;
     
@@ -632,11 +601,9 @@ class AdvancedCallService {
     debugPrint('🖥️ Screen sharing stopped');
   }
 
-  /**
-   * Start Recording
-   * 
-   * Begins call recording with specified quality.
-   */
+  /// Start Recording
+  /// 
+  /// Begins call recording with specified quality.
   Future<void> startRecording({CallQuality quality = CallQuality.high}) async {
     if (_status != CallStatus.connected) return;
     
@@ -650,11 +617,9 @@ class AdvancedCallService {
     debugPrint('⏺️ Call recording started');
   }
 
-  /**
-   * Stop Recording
-   * 
-   * Stops call recording and saves the file.
-   */
+  /// Stop Recording
+  /// 
+  /// Stops call recording and saves the file.
   Future<void> stopRecording() async {
     if (_currentCall?.isRecording != true) return;
     
@@ -811,11 +776,9 @@ class AdvancedCallService {
     _durationController.add(_callDuration);
   }
 
-  /**
-   * Dispose Resources
-   * 
-   * Properly closes all resources and prevents memory leaks.
-   */
+  /// Dispose Resources
+  /// 
+  /// Properly closes all resources and prevents memory leaks.
   void dispose() {
     _stopAllTimers();
     _networkMonitorTimer?.cancel();

@@ -1,37 +1,36 @@
-/**
- * AFO Chat Application - Advanced Call Screen
- * AFO: Afaan Oromoo Chat Services
- * 
- * This screen provides comprehensive voice and video calling functionality with 
- * minimal latency optimizations for users in the Afaan Oromoo community. Features include:
- * 
- * CALL INTERFACE:
- * - Professional calling interface with participant management
- * - Real-time call statistics and network monitoring
- * - Adaptive UI based on call type (voice, video, group, screen share)
- * - Dynamic quality adjustment based on network conditions
- * - Advanced control panels with gesture support
- * 
- * ADVANCED FEATURES:
- * - Group call support with participant grid view
- * - Screen sharing with annotation capabilities
- * - Call recording with quality selection
- * - Real-time call statistics overlay
- * - Network condition indicators and warnings
- * 
- * OPTIMIZATIONS:
- * - Minimal UI rendering for low latency
- * - Efficient participant video rendering
- * - Background processing optimization
- * - Memory management for long calls
- * - Battery usage optimization
- * 
- * ACCESSIBILITY:
- * - Voice control integration
- * - Screen reader support
- * - High contrast mode support
- * - Large button modes for accessibility
- */
+/// AFO Chat Application - Advanced Call Screen
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This screen provides comprehensive voice and video calling functionality with 
+/// minimal latency optimizations for users in the Afaan Oromoo community. Features include:
+/// 
+/// CALL INTERFACE:
+/// - Professional calling interface with participant management
+/// - Real-time call statistics and network monitoring
+/// - Adaptive UI based on call type (voice, video, group, screen share)
+/// - Dynamic quality adjustment based on network conditions
+/// - Advanced control panels with gesture support
+/// 
+/// ADVANCED FEATURES:
+/// - Group call support with participant grid view
+/// - Screen sharing with annotation capabilities
+/// - Call recording with quality selection
+/// - Real-time call statistics overlay
+/// - Network condition indicators and warnings
+/// 
+/// OPTIMIZATIONS:
+/// - Minimal UI rendering for low latency
+/// - Efficient participant video rendering
+/// - Background processing optimization
+/// - Memory management for long calls
+/// - Battery usage optimization
+/// 
+/// ACCESSIBILITY:
+/// - Voice control integration
+/// - Screen reader support
+/// - High contrast mode support
+/// - Large button modes for accessibility
+library;
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -77,7 +76,7 @@ class _AdvancedCallScreenState extends State<AdvancedCallScreen> with TickerProv
   CallStats? _callStats;
   bool _showControls = true;
   bool _showStats = false;
-  bool _isFullScreen = false;
+  final bool _isFullScreen = false;
 
   // UI timers
   Timer? _hideControlsTimer;
@@ -755,8 +754,9 @@ class _AdvancedCallScreenState extends State<AdvancedCallScreen> with TickerProv
     if (_callStats == null) return const SizedBox.shrink();
 
     NetworkCondition condition = NetworkCondition.good;
-    if (_callStats!.latency > 200) condition = NetworkCondition.poor;
-    else if (_callStats!.latency > 100) condition = NetworkCondition.fair;
+    if (_callStats!.latency > 200) {
+      condition = NetworkCondition.poor;
+    } else if (_callStats!.latency > 100) condition = NetworkCondition.fair;
     else if (_callStats!.latency < 50) condition = NetworkCondition.excellent;
 
     return Positioned(

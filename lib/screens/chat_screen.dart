@@ -1,26 +1,26 @@
-/**
- * AFO Chat Application - Chat Screen
- * AFO: Afaan Oromoo Chat Services
- * 
- * This screen provides the individual chat interface for conversations
- * between users in the Afaan Oromoo community. Features include:
- * 
- * - WhatsApp-style chat interface with message bubbles
- * - Real-time message sending and receiving (mock implementation)
- * - Professional UI with blue theme matching AFO branding
- * - Message input with send button functionality
- * - Contact information display in app bar
- * - Scrollable message history with proper alignment
- * 
- * The screen uses ChatService for message operations and maintains
- * state for the message input controller and conversation history.
- */
+/// AFO Chat Application - Chat Screen
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This screen provides the individual chat interface for conversations
+/// between users in the Afaan Oromoo community. Features include:
+/// 
+/// - WhatsApp-style chat interface with message bubbles
+/// - Real-time message sending and receiving (mock implementation)
+/// - Professional UI with blue theme matching AFO branding
+/// - Message input with send button functionality
+/// - Contact information display in app bar
+/// - Scrollable message history with proper alignment
+/// 
+/// The screen uses ChatService for message operations and maintains
+/// state for the message input controller and conversation history.
+library;
 
-import 'package:flutter/material.dart';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+
 import '../services/advanced_call_service.dart';
-import '../services/chat_service_new.dart';
+import '../services/chat_service.dart';
 import '../services/media_upload_service.dart';
 import '../widgets/media_picker.dart';
 import '../widgets/media_viewers.dart';
@@ -31,10 +31,10 @@ class ChatScreen extends StatefulWidget {
   final String contactName;
 
   const ChatScreen({
-    Key? key,
+    super.key,
     required this.contactId,
     required this.contactName,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -226,7 +226,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       );
                     }
                     return const SizedBox.shrink();
-                  }).toList(),
+                  }),
                   
                   Expanded(
                     child: ListView.builder(
@@ -364,7 +364,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 : FontStyle.normal,
                           ),
                         ),
-                        if (message.isEdited && message.metadata?['deleted'] != true) ..[
+                        if (message.isEdited && message.metadata?['deleted'] != true) ...[
                           const SizedBox(height: 2),
                           Text(
                             'edited',
@@ -407,6 +407,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ],
               ),
+            ),
             ),
           ),
           if (isMe) ...[

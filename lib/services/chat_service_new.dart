@@ -1,41 +1,38 @@
-/**
- * AFO Chat Application - Advanced Chat Service
- * AFO: Afaan Oromoo Chat Services
- * 
- * This comprehensive chat service provides full messaging capabilities for the
- * AFO chat application, designed specifically for the Afaan Oromoo community. 
- * Features include:
- * 
- * CORE MESSAGING:
- * - One-to-one chat with real-time message delivery
- * - Group chat with member management and permissions
- * - Message encryption/decryption using AES-256 encryption
- * - Message delivery status tracking (sent, delivered, read)
- * - Read receipts system with timestamp tracking
- * 
- * MESSAGE MANAGEMENT:
- * - Message history retrieval with pagination support
- * - Message search functionality across conversations
- * - Message editing and deletion with history tracking
- * - File and media message support with encryption
- * - Message reactions and threading capabilities
- * 
- * SECURITY FEATURES:
- * - End-to-end encryption for all messages
- * - Secure key management and exchange
- * - Message integrity verification
- * - User authentication and authorization
- * 
- * This mock implementation simulates real Firebase/Socket.IO functionality
- * for development and testing purposes.
- */
-
+/// AFO Chat Application - Advanced Chat Service
+/// AFO: Afaan Oromoo Chat Services
+/// 
+/// This comprehensive chat service provides full messaging capabilities for the
+/// AFO chat application, designed specifically for the Afaan Oromoo community. 
+/// Features include:
+/// 
+/// CORE MESSAGING:
+/// - One-to-one chat with real-time message delivery
+/// - Group chat with member management and permissions
+/// - Message encryption/decryption using AES-256 encryption
+/// - Message delivery status tracking (sent, delivered, read)
+/// - Read receipts system with timestamp tracking
+/// 
+/// MESSAGE MANAGEMENT:
+/// - Message history retrieval with pagination support
+/// - Message search functionality across conversations
+/// - Message editing and deletion with history tracking
+/// - File and media message support with encryption
+/// - Message reactions and threading capabilities
+/// 
+/// SECURITY FEATURES:
+/// - End-to-end encryption for all messages
+/// - Secure key management and exchange
+/// - Message integrity verification
+/// - User authentication and authorization
+/// 
+/// This mock implementation simulates real Firebase/Socket.IO functionality
+/// for development and testing purposes.
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
-import 'package:crypto/crypto.dart';
+
 import 'package:encrypt/encrypt.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
+
 import 'notification_manager.dart';
 
 /// Message delivery status enumeration
@@ -67,7 +64,6 @@ enum MessageType {
   voiceNote,
 }
 
-}
 
 /// Message edit history model
 class MessageEditHistory {
@@ -357,7 +353,7 @@ class MediaAttachment {
 
   // Get file size in human readable format
   String get formattedFileSize {
-    if (fileSize < 1024) return '${fileSize} B';
+    if (fileSize < 1024) return '$fileSize B';
     if (fileSize < 1024 * 1024) return '${(fileSize / 1024).toStringAsFixed(1)} KB';
     if (fileSize < 1024 * 1024 * 1024) return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(fileSize / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
@@ -480,24 +476,20 @@ class ChatService {
   static const int _pageSize = 50;
   final Map<String, int> _messagePage = {};
 
-  /**
-   * ChatService Constructor
-   * 
-   * Initializes the advanced chat service with encryption capabilities,
-   * mock data, and real-time streaming controllers. Sets up AES-256 encryption
-   * for secure message transmission.
-   */
+  /// ChatService Constructor
+  /// 
+  /// Initializes the advanced chat service with encryption capabilities,
+  /// mock data, and real-time streaming controllers. Sets up AES-256 encryption
+  /// for secure message transmission.
   ChatService() {
     _initializeEncryption();
     _initializeMockData();
     _initializeNotifications();
   }
 
-  /**
-   * Initialize Notifications
-   * 
-   * Initializes the notification manager for push notifications and alerts.
-   */
+  /// Initialize Notifications
+  /// 
+  /// Initializes the notification manager for push notifications and alerts.
   Future<void> _initializeNotifications() async {
     try {
       await _notificationManager.initialize();
@@ -507,24 +499,20 @@ class ChatService {
     }
   }
 
-  /**
-   * Initialize Encryption
-   * 
-   * Sets up AES-256 encryption for secure message transmission.
-   * In production, keys would be exchanged securely between users.
-   */
+  /// Initialize Encryption
+  /// 
+  /// Sets up AES-256 encryption for secure message transmission.
+  /// In production, keys would be exchanged securely between users.
   void _initializeEncryption() {
     final key = Key.fromSecureRandom(32); // AES-256 key
     _iv = IV.fromSecureRandom(16); // AES block size
     _encrypter = Encrypter(AES(key));
   }
 
-  /**
-   * Generate Chat Key
-   * 
-   * Generates a unique encryption key for each chat room.
-   * In production, this would use proper key exchange protocols.
-   */
+  /// Generate Chat Key
+  /// 
+  /// Generates a unique encryption key for each chat room.
+  /// In production, this would use proper key exchange protocols.
   Key _generateChatKey(String chatRoomId) {
     if (!_chatKeys.containsKey(chatRoomId)) {
       _chatKeys[chatRoomId] = Key.fromSecureRandom(32);
@@ -532,11 +520,9 @@ class ChatService {
     return _chatKeys[chatRoomId]!;
   }
 
-  /**
-   * Encrypt Message
-   * 
-   * Encrypts message content using AES-256 encryption.
-   */
+  /// Encrypt Message
+  /// 
+  /// Encrypts message content using AES-256 encryption.
   String _encryptMessage(String message, String chatRoomId) {
     try {
       final key = _generateChatKey(chatRoomId);
@@ -549,11 +535,9 @@ class ChatService {
     }
   }
 
-  /**
-   * Decrypt Message
-   * 
-   * Decrypts encrypted message content.
-   */
+  /// Decrypt Message
+  /// 
+  /// Decrypts encrypted message content.
   String _decryptMessage(String encryptedMessage, String chatRoomId) {
     try {
       final key = _generateChatKey(chatRoomId);
@@ -566,21 +550,17 @@ class ChatService {
     }
   }
 
-  /**
-   * Set Current User
-   * 
-   * Sets the current authenticated user for the chat service.
-   */
+  /// Set Current User
+  /// 
+  /// Sets the current authenticated user for the chat service.
   void setCurrentUser(String userId, [String? userName]) {
     _currentUserId = userId;
     _currentUserName = userName ?? 'User';
   }
 
-  /**
-   * Send Message (One-to-One)
-   * 
-   * Sends a message to another user with encryption and delivery tracking.
-   */
+  /// Send Message (One-to-One)
+  /// 
+  /// Sends a message to another user with encryption and delivery tracking.
   Future<ChatMessage> sendMessage({
     required String receiverId,
     required String message,
@@ -636,11 +616,9 @@ class ChatService {
     return chatMessage;
   }
 
-  /**
-   * Create Group Chat
-   * 
-   * Creates a new group chat with specified participants.
-   */
+  /// Create Group Chat
+  /// 
+  /// Creates a new group chat with specified participants.
   Future<ChatRoom> createGroupChat({
     required String groupName,
     required List<String> participantIds,
@@ -688,11 +666,9 @@ class ChatService {
     return groupChat;
   }
 
-  /**
-   * Send Group Message
-   * 
-   * Sends a message to a group chat with encryption and delivery tracking.
-   */
+  /// Send Group Message
+  /// 
+  /// Sends a message to a group chat with encryption and delivery tracking.
   Future<ChatMessage> sendGroupMessage({
     required String groupId,
     required String message,
@@ -753,11 +729,9 @@ class ChatService {
     return chatMessage;
   }
 
-  /**
-   * Mark Message as Read
-   * 
-   * Marks a message as read by the current user and sends read receipts.
-   */
+  /// Mark Message as Read
+  /// 
+  /// Marks a message as read by the current user and sends read receipts.
   Future<void> markMessageAsRead(String messageId, String chatRoomId) async {
     if (_currentUserId == null) return;
 
@@ -797,11 +771,9 @@ class ChatService {
     _notifyChatsUpdate();
   }
 
-  /**
-   * Get Messages Stream
-   * 
-   * Returns a real-time stream of messages for a chat room with decryption.
-   */
+  /// Get Messages Stream
+  /// 
+  /// Returns a real-time stream of messages for a chat room with decryption.
   Stream<List<ChatMessage>> getMessagesStream({required String userId}) {
     if (_currentUserId == null) {
       throw Exception("User not authenticated");
@@ -811,11 +783,9 @@ class ChatService {
     return _getMessageStreamForChatRoom(chatRoomId);
   }
 
-  /**
-   * Get Group Messages Stream
-   * 
-   * Returns a real-time stream of messages for a group chat.
-   */
+  /// Get Group Messages Stream
+  /// 
+  /// Returns a real-time stream of messages for a group chat.
   Stream<List<ChatMessage>> getGroupMessagesStream(String groupId) {
     if (_currentUserId == null) {
       throw Exception("User not authenticated");
@@ -824,11 +794,9 @@ class ChatService {
     return _getMessageStreamForChatRoom(groupId);
   }
 
-  /**
-   * Get Message Stream for Chat Room
-   * 
-   * Internal method to get message stream with decryption.
-   */
+  /// Get Message Stream for Chat Room
+  /// 
+  /// Internal method to get message stream with decryption.
   Stream<List<ChatMessage>> _getMessageStreamForChatRoom(String chatRoomId) {
     _messageControllers[chatRoomId] ??= StreamController<List<ChatMessage>>.broadcast();
 
@@ -843,11 +811,9 @@ class ChatService {
     return _messageControllers[chatRoomId]!.stream;
   }
 
-  /**
-   * Get Decrypted Messages
-   * 
-   * Retrieves and decrypts messages for display.
-   */
+  /// Get Decrypted Messages
+  /// 
+  /// Retrieves and decrypts messages for display.
   List<ChatMessage> _getDecryptedMessages(String chatRoomId) {
     final messages = _messages[chatRoomId]?.reversed.toList() ?? [];
     
@@ -866,11 +832,9 @@ class ChatService {
     }).toList();
   }
 
-  /**
-   * Get Message History
-   * 
-   * Retrieves message history with pagination support.
-   */
+  /// Get Message History
+  /// 
+  /// Retrieves message history with pagination support.
   Future<List<ChatMessage>> getMessageHistory({
     required String chatRoomId,
     int page = 0,
@@ -917,11 +881,9 @@ class ChatService {
     }).toList();
   }
 
-  /**
-   * Search Messages
-   * 
-   * Searches messages across all chat rooms.
-   */
+  /// Search Messages
+  /// 
+  /// Searches messages across all chat rooms.
   Future<List<ChatMessage>> searchMessages({
     required String query,
     String? chatRoomId,
@@ -960,11 +922,9 @@ class ChatService {
     return results;
   }
 
-  /**
-   * Get User Chats Stream
-   * 
-   * Returns a real-time stream of all chat rooms for the current user.
-   */
+  /// Get User Chats Stream
+  /// 
+  /// Returns a real-time stream of all chat rooms for the current user.
   Stream<List<ChatRoom>> getUserChats() {
     if (_currentUserId == null) {
       throw Exception("User not authenticated");
@@ -989,22 +949,18 @@ class ChatService {
 
   // Helper Methods
 
-  /**
-   * Generate Chat Room ID
-   * 
-   * Creates a consistent chat room identifier for two users.
-   */
+  /// Generate Chat Room ID
+  /// 
+  /// Creates a consistent chat room identifier for two users.
   String _getChatRoomId(String user1, String user2) {
     List<String> users = [user1, user2];
     users.sort();
     return users.join('_');
   }
 
-  /**
-   * Update Chat Room
-   * 
-   * Updates chat room with latest message information.
-   */
+  /// Update Chat Room
+  /// 
+  /// Updates chat room with latest message information.
   Future<void> _updateChatRoom(String chatRoomId, ChatMessage message) async {
     final existingRoom = _chatRooms[chatRoomId];
     
@@ -1057,11 +1013,9 @@ class ChatService {
     _notifyChatsUpdate();
   }
 
-  /**
-   * Create System Message
-   * 
-   * Creates a system message for group events.
-   */
+  /// Create System Message
+  /// 
+  /// Creates a system message for group events.
   Future<void> _createSystemMessage(String chatRoomId, String content) async {
     final timestamp = DateTime.now();
     final messageId = 'system_${timestamp.millisecondsSinceEpoch}';
@@ -1084,11 +1038,9 @@ class ChatService {
     _notifyMessageUpdate(chatRoomId);
   }
 
-  /**
-   * Simulate Message Delivery
-   * 
-   * Simulates realistic message delivery process with timers.
-   */
+  /// Simulate Message Delivery
+  /// 
+  /// Simulates realistic message delivery process with timers.
   void _simulateMessageDelivery(String messageId, String chatRoomId) {
     // Simulate sent status after 100ms
     Timer(const Duration(milliseconds: 100), () {
@@ -1107,11 +1059,9 @@ class ChatService {
     });
   }
 
-  /**
-   * Simulate Group Message Delivery
-   * 
-   * Simulates message delivery to all group members.
-   */
+  /// Simulate Group Message Delivery
+  /// 
+  /// Simulates message delivery to all group members.
   void _simulateGroupMessageDelivery(String messageId, String groupId, List<String> participantIds) {
     // Simulate sent status
     Timer(const Duration(milliseconds: 100), () {
@@ -1134,11 +1084,9 @@ class ChatService {
     }
   }
 
-  /**
-   * Update Message Status
-   * 
-   * Updates the status of a specific message.
-   */
+  /// Update Message Status
+  /// 
+  /// Updates the status of a specific message.
   void _updateMessageStatus(String messageId, String chatRoomId, MessageStatus status) {
     final messages = _messages[chatRoomId];
     if (messages == null) return;
@@ -1165,11 +1113,9 @@ class ChatService {
     _notifyMessageUpdate(chatRoomId);
   }
 
-  /**
-   * Add Read Receipt
-   * 
-   * Adds a read receipt for a specific user.
-   */
+  /// Add Read Receipt
+  /// 
+  /// Adds a read receipt for a specific user.
   void _addReadReceipt(String messageId, String chatRoomId, String userId) {
     final messages = _messages[chatRoomId];
     if (messages == null) return;
@@ -1193,11 +1139,9 @@ class ChatService {
     _notifyMessageUpdate(chatRoomId);
   }
 
-  /**
-   * Notify Message Update
-   * 
-   * Notifies all listeners of message updates.
-   */
+  /// Notify Message Update
+  /// 
+  /// Notifies all listeners of message updates.
   void _notifyMessageUpdate(String chatRoomId) {
     final controller = _messageControllers[chatRoomId];
     if (controller != null && !controller.isClosed) {
@@ -1206,11 +1150,9 @@ class ChatService {
     }
   }
 
-  /**
-   * Notify Chats Update
-   * 
-   * Notifies all listeners of chat list updates.
-   */
+  /// Notify Chats Update
+  /// 
+  /// Notifies all listeners of chat list updates.
   void _notifyChatsUpdate() {
     if (!_chatRoomsController.isClosed && _currentUserId != null) {
       final userChatRooms = _chatRooms.values
@@ -1223,11 +1165,9 @@ class ChatService {
     }
   }
 
-  /**
-   * Initialize Mock Data
-   * 
-   * Creates sample data for development and testing.
-   */
+  /// Initialize Mock Data
+  /// 
+  /// Creates sample data for development and testing.
   void _initializeMockData() {
     final now = DateTime.now();
     
@@ -1354,12 +1294,10 @@ class ChatService {
     );
   }
 
-  /**
-   * Edit Message
-   * 
-   * Allows users to edit their own messages within a time limit.
-   * Updates the message content and marks it as edited.
-   */
+  /// Edit Message
+  /// 
+  /// Allows users to edit their own messages within a time limit.
+  /// Updates the message content and marks it as edited.
   Future<bool> editMessage({
     required String messageId,
     required String chatRoomId,
@@ -1433,12 +1371,10 @@ class ChatService {
     }
   }
 
-  /**
-   * Delete Message
-   * 
-   * Allows users to delete their own messages within a time limit.
-   * Supports both "delete for me" and "delete for everyone" options.
-   */
+  /// Delete Message
+  /// 
+  /// Allows users to delete their own messages within a time limit.
+  /// Supports both "delete for me" and "delete for everyone" options.
   Future<bool> deleteMessage({
     required String messageId,
     required String chatRoomId,
@@ -1526,11 +1462,9 @@ class ChatService {
     }
   }
 
-  /**
-   * Get Message Edit History
-   * 
-   * Returns the edit history for a specific message.
-   */
+  /// Get Message Edit History
+  /// 
+  /// Returns the edit history for a specific message.
   Future<MessageEditHistory?> getMessageEditHistory(String messageId, String chatRoomId) async {
     final messages = _messages[chatRoomId];
     if (messages == null) return null;
@@ -1551,11 +1485,9 @@ class ChatService {
     );
   }
 
-  /**
-   * Can Edit Message
-   * 
-   * Checks if a message can be edited by the current user.
-   */
+  /// Can Edit Message
+  /// 
+  /// Checks if a message can be edited by the current user.
   bool canEditMessage(ChatMessage message) {
     if (_currentUserId == null || message.senderId != _currentUserId) {
       return false;
@@ -1569,11 +1501,9 @@ class ChatService {
     return timeSinceMessage.inMinutes <= 15;
   }
 
-  /**
-   * Can Delete Message
-   * 
-   * Checks if a message can be deleted by the current user.
-   */
+  /// Can Delete Message
+  /// 
+  /// Checks if a message can be deleted by the current user.
   bool canDeleteMessage(ChatMessage message, {bool deleteForEveryone = false}) {
     if (_currentUserId == null) return false;
 
@@ -1588,11 +1518,9 @@ class ChatService {
     return true;
   }
 
-  /**
-   * Dispose Resources
-   * 
-   * Properly closes all resources and prevents memory leaks.
-   */
+  /// Dispose Resources
+  /// 
+  /// Properly closes all resources and prevents memory leaks.
   void dispose() {
     // Cancel all timers
     for (final timer in _deliveryTimers.values) {
@@ -1621,11 +1549,9 @@ class ChatService {
     _chatKeys.clear();
   }
 
-  /**
-   * Notification Methods
-   * 
-   * These methods handle triggering notifications for different types of chat events.
-   */
+  /// Notification Methods
+  /// 
+  /// These methods handle triggering notifications for different types of chat events.
 
   // Trigger message notification
   Future<void> _triggerMessageNotification(ChatMessage message, String receiverId) async {

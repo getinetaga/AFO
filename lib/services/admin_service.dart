@@ -1,34 +1,39 @@
 // Admin Service for AFO Chat Application
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 import '../models/admin_models.dart';
 
 class AdminService {
-  static final AdminService _instance = AdminService._internal();
   factory AdminService() => _instance;
+
   AdminService._internal();
 
-  // Current admin user
-  AdminUser? _currentAdmin;
-  
-  // Mock data storage
-  final Map<String, AdminUser> _users = {};
-  final Map<String, AdminGroup> _groups = {};
-  final Map<String, ContentReport> _reports = {};
+  static final AdminService _instance = AdminService._internal();
+
   final Map<String, ModerationAction> _actions = {};
-  
-  // Stream controllers
-  final StreamController<List<AdminUser>> _usersController = 
-      StreamController<List<AdminUser>>.broadcast();
-  final StreamController<List<ContentReport>> _reportsController = 
-      StreamController<List<ContentReport>>.broadcast();
   final StreamController<PlatformAnalytics> _analyticsController = 
       StreamController<PlatformAnalytics>.broadcast();
 
+  // Current admin user
+  AdminUser? _currentAdmin;
+
+  final Map<String, AdminGroup> _groups = {};
+  final Map<String, ContentReport> _reports = {};
+  final StreamController<List<ContentReport>> _reportsController = 
+      StreamController<List<ContentReport>>.broadcast();
+
+  // Mock data storage
+  final Map<String, AdminUser> _users = {};
+
+  // Stream controllers
+  final StreamController<List<AdminUser>> _usersController = 
+      StreamController<List<AdminUser>>.broadcast();
+
   // Getters for streams
   Stream<List<AdminUser>> get usersStream => _usersController.stream;
+
   Stream<List<ContentReport>> get reportsStream => _reportsController.stream;
+
   Stream<PlatformAnalytics> get analyticsStream => _analyticsController.stream;
 
   // Current admin getter
@@ -52,166 +57,6 @@ class AdminService {
       print('AdminService: Failed to initialize: $e');
       return false;
     }
-  }
-
-  // Initialize mock data
-  Future<void> _initializeMockData() async {
-    // Create sample admin users
-    final sampleUsers = [
-      AdminUser(
-        id: 'admin_1',
-        username: 'superadmin',
-        email: 'superadmin@afo.com',
-        displayName: 'Super Administrator',
-        role: UserRole.superAdmin,
-        status: UserStatus.active,
-        createdAt: DateTime.now().subtract(const Duration(days: 365)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isVerified: true,
-        metadata: {'loginCount': 500, 'actionsCount': 150},
-      ),
-      AdminUser(
-        id: 'admin_2',
-        username: 'admin',
-        email: 'admin@afo.com',
-        displayName: 'System Administrator',
-        role: UserRole.admin,
-        status: UserStatus.active,
-        createdAt: DateTime.now().subtract(const Duration(days: 180)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 3)),
-        isVerified: true,
-        metadata: {'loginCount': 250, 'actionsCount': 80},
-      ),
-      AdminUser(
-        id: 'mod_1',
-        username: 'moderator1',
-        email: 'mod1@afo.com',
-        displayName: 'Content Moderator',
-        role: UserRole.moderator,
-        status: UserStatus.active,
-        createdAt: DateTime.now().subtract(const Duration(days: 90)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 8)),
-        isVerified: true,
-        metadata: {'loginCount': 120, 'actionsCount': 45},
-      ),
-    ];
-
-    // Add regular users
-    for (int i = 1; i <= 100; i++) {
-      final user = AdminUser(
-        id: 'user_$i',
-        username: 'user$i',
-        email: 'user$i@example.com',
-        displayName: 'User $i',
-        role: UserRole.user,
-        status: _getRandomUserStatus(),
-        createdAt: DateTime.now().subtract(Duration(days: Random().nextInt(365))),
-        lastLoginAt: DateTime.now().subtract(Duration(hours: Random().nextInt(168))),
-        isVerified: Random().nextBool(),
-        reportCount: Random().nextInt(5),
-        groupMemberships: _getRandomGroups(),
-        metadata: {
-          'loginCount': Random().nextInt(100),
-          'messagesCount': Random().nextInt(1000),
-        },
-      );
-      _users[user.id] = user;
-    }
-
-    // Add admin users
-    for (final user in sampleUsers) {
-      _users[user.id] = user;
-    }
-
-    // Create sample groups
-    for (int i = 1; i <= 20; i++) {
-      final group = AdminGroup(
-        id: 'group_$i',
-        name: 'Group $i',
-        description: 'Sample group $i for testing',
-        creatorId: 'user_${Random().nextInt(50) + 1}',
-        memberIds: _getRandomMemberIds(),
-        adminIds: ['user_${Random().nextInt(10) + 1}'],
-        createdAt: DateTime.now().subtract(Duration(days: Random().nextInt(180))),
-        lastActivityAt: DateTime.now().subtract(Duration(hours: Random().nextInt(24))),
-        isPublic: Random().nextBool(),
-        messageCount: Random().nextInt(500),
-        reportCount: Random().nextInt(10),
-      );
-      _groups[group.id] = group;
-    }
-
-    // Create sample reports
-    for (int i = 1; i <= 50; i++) {
-      final report = ContentReport(
-        id: 'report_$i',
-        reporterId: 'user_${Random().nextInt(50) + 1}',
-        reporterName: 'User ${Random().nextInt(50) + 1}',
-        targetUserId: 'user_${Random().nextInt(50) + 51}',
-        targetUserName: 'User ${Random().nextInt(50) + 51}',
-        messageId: 'msg_${Random().nextInt(1000)}',
-        groupId: Random().nextBool() ? 'group_${Random().nextInt(20) + 1}' : null,
-        type: ReportType.values[Random().nextInt(ReportType.values.length)],
-        reason: _getRandomReportReason(),
-        status: ReportStatus.values[Random().nextInt(ReportStatus.values.length)],
-        severity: ActionSeverity.values[Random().nextInt(ActionSeverity.values.length)],
-        createdAt: DateTime.now().subtract(Duration(hours: Random().nextInt(168))),
-        resolvedAt: Random().nextBool() 
-            ? DateTime.now().subtract(Duration(hours: Random().nextInt(24)))
-            : null,
-        contentSnapshot: 'Sample content that was reported',
-      );
-      _reports[report.id] = report;
-    }
-
-    _notifyListeners();
-  }
-
-  // Helper methods for mock data
-  UserStatus _getRandomUserStatus() {
-    final statuses = [
-      UserStatus.active,
-      UserStatus.active,
-      UserStatus.active, // More likely to be active
-      UserStatus.inactive,
-      UserStatus.suspended,
-      UserStatus.banned,
-    ];
-    return statuses[Random().nextInt(statuses.length)];
-  }
-
-  List<String> _getRandomGroups() {
-    final groupCount = Random().nextInt(5);
-    final groups = <String>[];
-    for (int i = 0; i < groupCount; i++) {
-      groups.add('group_${Random().nextInt(20) + 1}');
-    }
-    return groups;
-  }
-
-  List<String> _getRandomMemberIds() {
-    final memberCount = Random().nextInt(50) + 5;
-    final members = <String>[];
-    for (int i = 0; i < memberCount; i++) {
-      members.add('user_${Random().nextInt(100) + 1}');
-    }
-    return members;
-  }
-
-  String _getRandomReportReason() {
-    final reasons = [
-      'Inappropriate language',
-      'Spam messages',
-      'Harassment',
-      'Sharing inappropriate content',
-      'Impersonation',
-      'Hate speech',
-      'Copyright violation',
-      'Privacy violation',
-      'Violence or threats',
-      'Other violation',
-    ];
-    return reasons[Random().nextInt(reasons.length)];
   }
 
   // User management methods
@@ -624,14 +469,6 @@ class AdminService {
     );
   }
 
-  // Periodic analytics updates
-  void _startAnalyticsUpdates() {
-    Timer.periodic(const Duration(minutes: 5), (_) async {
-      final analytics = await getAnalytics();
-      _analyticsController.add(analytics);
-    });
-  }
-
   // Authentication methods
   Future<AdminActionResult> authenticate(String username, String password) async {
     // Mock authentication
@@ -657,12 +494,6 @@ class AdminService {
 
   void logout() {
     _currentAdmin = null;
-  }
-
-  // Notification helpers
-  void _notifyListeners() {
-    _usersController.add(_users.values.toList());
-    _reportsController.add(_reports.values.toList());
   }
 
   // Get moderation actions
@@ -700,6 +531,180 @@ class AdminService {
     _usersController.close();
     _reportsController.close();
     _analyticsController.close();
+  }
+
+  // Initialize mock data
+  Future<void> _initializeMockData() async {
+    // Create sample admin users
+    final sampleUsers = [
+      AdminUser(
+        id: 'admin_1',
+        username: 'superadmin',
+        email: 'superadmin@afo.com',
+        displayName: 'Super Administrator',
+        role: UserRole.superAdmin,
+        status: UserStatus.active,
+        createdAt: DateTime.now().subtract(const Duration(days: 365)),
+        lastLoginAt: DateTime.now().subtract(const Duration(hours: 1)),
+        isVerified: true,
+        metadata: {'loginCount': 500, 'actionsCount': 150},
+      ),
+      AdminUser(
+        id: 'admin_2',
+        username: 'admin',
+        email: 'admin@afo.com',
+        displayName: 'System Administrator',
+        role: UserRole.admin,
+        status: UserStatus.active,
+        createdAt: DateTime.now().subtract(const Duration(days: 180)),
+        lastLoginAt: DateTime.now().subtract(const Duration(hours: 3)),
+        isVerified: true,
+        metadata: {'loginCount': 250, 'actionsCount': 80},
+      ),
+      AdminUser(
+        id: 'mod_1',
+        username: 'moderator1',
+        email: 'mod1@afo.com',
+        displayName: 'Content Moderator',
+        role: UserRole.moderator,
+        status: UserStatus.active,
+        createdAt: DateTime.now().subtract(const Duration(days: 90)),
+        lastLoginAt: DateTime.now().subtract(const Duration(hours: 8)),
+        isVerified: true,
+        metadata: {'loginCount': 120, 'actionsCount': 45},
+      ),
+    ];
+
+    // Add regular users
+    for (int i = 1; i <= 100; i++) {
+      final user = AdminUser(
+        id: 'user_$i',
+        username: 'user$i',
+        email: 'user$i@example.com',
+        displayName: 'User $i',
+        role: UserRole.user,
+        status: _getRandomUserStatus(),
+        createdAt: DateTime.now().subtract(Duration(days: Random().nextInt(365))),
+        lastLoginAt: DateTime.now().subtract(Duration(hours: Random().nextInt(168))),
+        isVerified: Random().nextBool(),
+        reportCount: Random().nextInt(5),
+        groupMemberships: _getRandomGroups(),
+        metadata: {
+          'loginCount': Random().nextInt(100),
+          'messagesCount': Random().nextInt(1000),
+        },
+      );
+      _users[user.id] = user;
+    }
+
+    // Add admin users
+    for (final user in sampleUsers) {
+      _users[user.id] = user;
+    }
+
+    // Create sample groups
+    for (int i = 1; i <= 20; i++) {
+      final group = AdminGroup(
+        id: 'group_$i',
+        name: 'Group $i',
+        description: 'Sample group $i for testing',
+        creatorId: 'user_${Random().nextInt(50) + 1}',
+        memberIds: _getRandomMemberIds(),
+        adminIds: ['user_${Random().nextInt(10) + 1}'],
+        createdAt: DateTime.now().subtract(Duration(days: Random().nextInt(180))),
+        lastActivityAt: DateTime.now().subtract(Duration(hours: Random().nextInt(24))),
+        isPublic: Random().nextBool(),
+        messageCount: Random().nextInt(500),
+        reportCount: Random().nextInt(10),
+      );
+      _groups[group.id] = group;
+    }
+
+    // Create sample reports
+    for (int i = 1; i <= 50; i++) {
+      final report = ContentReport(
+        id: 'report_$i',
+        reporterId: 'user_${Random().nextInt(50) + 1}',
+        reporterName: 'User ${Random().nextInt(50) + 1}',
+        targetUserId: 'user_${Random().nextInt(50) + 51}',
+        targetUserName: 'User ${Random().nextInt(50) + 51}',
+        messageId: 'msg_${Random().nextInt(1000)}',
+        groupId: Random().nextBool() ? 'group_${Random().nextInt(20) + 1}' : null,
+        type: ReportType.values[Random().nextInt(ReportType.values.length)],
+        reason: _getRandomReportReason(),
+        status: ReportStatus.values[Random().nextInt(ReportStatus.values.length)],
+        severity: ActionSeverity.values[Random().nextInt(ActionSeverity.values.length)],
+        createdAt: DateTime.now().subtract(Duration(hours: Random().nextInt(168))),
+        resolvedAt: Random().nextBool() 
+            ? DateTime.now().subtract(Duration(hours: Random().nextInt(24)))
+            : null,
+        contentSnapshot: 'Sample content that was reported',
+      );
+      _reports[report.id] = report;
+    }
+
+    _notifyListeners();
+  }
+
+  // Helper methods for mock data
+  UserStatus _getRandomUserStatus() {
+    final statuses = [
+      UserStatus.active,
+      UserStatus.active,
+      UserStatus.active, // More likely to be active
+      UserStatus.inactive,
+      UserStatus.suspended,
+      UserStatus.banned,
+    ];
+    return statuses[Random().nextInt(statuses.length)];
+  }
+
+  List<String> _getRandomGroups() {
+    final groupCount = Random().nextInt(5);
+    final groups = <String>[];
+    for (int i = 0; i < groupCount; i++) {
+      groups.add('group_${Random().nextInt(20) + 1}');
+    }
+    return groups;
+  }
+
+  List<String> _getRandomMemberIds() {
+    final memberCount = Random().nextInt(50) + 5;
+    final members = <String>[];
+    for (int i = 0; i < memberCount; i++) {
+      members.add('user_${Random().nextInt(100) + 1}');
+    }
+    return members;
+  }
+
+  String _getRandomReportReason() {
+    final reasons = [
+      'Inappropriate language',
+      'Spam messages',
+      'Harassment',
+      'Sharing inappropriate content',
+      'Impersonation',
+      'Hate speech',
+      'Copyright violation',
+      'Privacy violation',
+      'Violence or threats',
+      'Other violation',
+    ];
+    return reasons[Random().nextInt(reasons.length)];
+  }
+
+  // Periodic analytics updates
+  void _startAnalyticsUpdates() {
+    Timer.periodic(const Duration(minutes: 5), (_) async {
+      final analytics = await getAnalytics();
+      _analyticsController.add(analytics);
+    });
+  }
+
+  // Notification helpers
+  void _notifyListeners() {
+    _usersController.add(_users.values.toList());
+    _reportsController.add(_reports.values.toList());
   }
 }
 
