@@ -49,14 +49,15 @@ library;
 
 
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' show Platform;
+
+import 'package:audioplayers/audioplayers.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 // ============================================================================
 // NOTIFICATION ENUMS AND TYPES
@@ -130,10 +131,13 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _localNotifications = 
-      FlutterLocalNotificationsPlugin();
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  FlutterLocalNotificationsPlugin? _localNotifications;
+
+  // Don't fetch FirebaseMessaging.instance at module load time — tests may not
+  // have Firebase initialized. Resolve the instance lazily when needed.
+  FirebaseMessaging get _firebaseMessaging => FirebaseMessaging.instance;
+
+  AudioPlayer? _audioPlayer;
   
   bool _isInitialized = false;
   String? _fcmToken;
@@ -165,10 +169,10 @@ class NotificationService {
       await _setupMessageHandlers();
 
       _isInitialized = true;
-      print('NotificationService: Initialized successfully');
+      debugPrint('NotificationService: Initialized successfully');
       return true;
     } catch (e) {
-      print('NotificationService: Initialization failed: $e');
+      debugPrint('NotificationService: Initialization failed: $e');
       return false;
     }
   }
@@ -193,11 +197,13 @@ class NotificationService {
       sound: true,
     );
 
-    print('User granted permission: ${settings.authorizationStatus}');
+    debugPrint('User granted permission: ${settings.authorizationStatus}');
   }
 
   // Initialize local notifications
   Future<void> _initializeLocalNotifications() async {
+    _localNotifications ??= FlutterLocalNotificationsPlugin();
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -214,13 +220,13 @@ class NotificationService {
       iOS: initializationSettingsIOS,
     );
 
-    await _localNotifications.initialize(
+      await _localNotifications!.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
     // Create notification channels for Android
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       await _createNotificationChannels();
     }
   }
@@ -228,21 +234,21 @@ class NotificationService {
   // Create Android notification channels
   Future<void> _createNotificationChannels() async {
     final List<AndroidNotificationChannel> channels = [
-      const AndroidNotificationChannel(
+      AndroidNotificationChannel(
         messageChannelId,
         'Messages',
         description: 'Notifications for new messages',
         importance: Importance.high,
-        sound: RawResourceAndroidNotificationSound('message_sound'),
+        sound: const RawResourceAndroidNotificationSound('message_sound'),
         enableVibration: true,
         vibrationPattern: Int64List.fromList([0, 250, 250, 250]),
       ),
-      const AndroidNotificationChannel(
+      AndroidNotificationChannel(
         callChannelId,
         'Calls',
         description: 'Notifications for incoming calls',
         importance: Importance.max,
-        sound: RawResourceAndroidNotificationSound('call_sound'),
+        sound: const RawResourceAndroidNotificationSound('call_sound'),
         enableVibration: true,
         vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
       ),
@@ -270,19 +276,20 @@ class NotificationService {
       ),
     ];
 
-    for (final channel in channels) {
-      await _localNotifications
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
-    }
+  for (final channel in channels) {
+    await _localNotifications
+      ?.
+      resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+  }
   }
 
   // Initialize Firebase messaging
   Future<void> _initializeFirebaseMessaging() async {
     // Get FCM token
-    _fcmToken = await _firebaseMessaging.getToken();
-    print('FCM Token: $_fcmToken');
+  _fcmToken = await _firebaseMessaging.getToken();
+  debugPrint('FCM Token: $_fcmToken');
 
     // Handle token refresh
     _firebaseMessaging.onTokenRefresh.listen((token) {
@@ -316,7 +323,7 @@ class NotificationService {
 
   // Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
-    print('Handling foreground message: ${message.messageId}');
+  debugPrint('Handling foreground message: ${message.messageId}');
     
     final notificationType = _getNotificationTypeFromMessage(message);
     
@@ -331,7 +338,7 @@ class NotificationService {
 
   // Handle message when app is opened from notification
   void _handleMessageOpenedApp(RemoteMessage message) {
-    print('App opened from notification: ${message.messageId}');
+  debugPrint('App opened from notification: ${message.messageId}');
     _navigateFromNotification(message.data);
   }
 
@@ -382,7 +389,7 @@ class NotificationService {
       styleInformation: _getNotificationStyle(body, notificationType),
       autoCancel: true,
       enableVibration: await _shouldVibrate(notificationType),
-      vibrationPattern: _getVibrationPattern(notificationType),
+      vibrationPattern: Int64List.fromList(_getVibrationPattern(notificationType)),
       sound: await _getNotificationSound(notificationType),
       category: AndroidNotificationCategory.message,
       visibility: NotificationVisibility.private,
@@ -400,16 +407,39 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _localNotifications.show(
+      if (_localNotifications != null) {
+        await _localNotifications!.show(
       notificationId,
       title,
       body,
       details,
       payload: payload != null ? _encodePayload(payload) : null,
     );
+      }
 
     // Play custom sound and vibration
     await _playNotificationEffects(notificationType);
+  }
+
+  /// Public wrapper for showing a local notification.
+  ///
+  /// `NotificationManager` and other external callers should use this method
+  /// instead of trying to access the private `_showLocalNotification` which
+  /// is library-private and not visible from other files.
+  Future<void> showLocalNotification({
+    required String title,
+    required String body,
+    Map<String, dynamic>? payload,
+    NotificationType notificationType = NotificationType.message,
+    NotificationPriority priority = NotificationPriority.normal,
+  }) async {
+    await _showLocalNotification(
+      title: title,
+      body: body,
+      payload: payload,
+      notificationType: notificationType,
+      priority: priority,
+    );
   }
 
   // Show message notification with additional features
@@ -513,12 +543,12 @@ class NotificationService {
 
   // Cancel notification
   Future<void> cancelNotification(int notificationId) async {
-    await _localNotifications.cancel(notificationId);
+  if (_localNotifications != null) await _localNotifications!.cancel(notificationId);
   }
 
   // Cancel all notifications
   Future<void> cancelAllNotifications() async {
-    await _localNotifications.cancelAll();
+  if (_localNotifications != null) await _localNotifications!.cancelAll();
   }
 
   // Handle notification tap
@@ -557,17 +587,17 @@ class NotificationService {
   // Navigation helpers (to be implemented based on your app's navigation)
   void _navigateToChat(String chatRoomId) {
     // Implement navigation to chat screen
-    print('Navigating to chat: $chatRoomId');
+    debugPrint('Navigating to chat: $chatRoomId');
   }
 
   void _navigateToCall(String callId) {
     // Implement navigation to call screen
-    print('Navigating to call: $callId');
+    debugPrint('Navigating to call: $callId');
   }
 
   void _navigateToHome() {
     // Implement navigation to home screen
-    print('Navigating to home');
+    debugPrint('Navigating to home');
   }
 
   // Notification settings helpers
@@ -607,11 +637,12 @@ class NotificationService {
     
     final soundFile = _getSoundFile(type);
     if (soundFile != null) {
-      try {
-        await _audioPlayer.play(AssetSource(soundFile));
-      } catch (e) {
-        print('Error playing sound: $e');
-      }
+        _audioPlayer ??= AudioPlayer();
+        try {
+          await _audioPlayer!.play(AssetSource(soundFile));
+        } catch (e) {
+          debugPrint('Error playing sound: $e');
+        }
     }
   }
 
@@ -619,7 +650,7 @@ class NotificationService {
     if (!await _shouldVibrate(type)) return;
     
     final pattern = _getVibrationPattern(type);
-    if (await Vibration.hasVibrator() ?? false) {
+    if (await Vibration.hasVibrator()) {
       if (pattern.isNotEmpty) {
         await Vibration.vibrate(pattern: pattern);
       } else {
@@ -727,8 +758,14 @@ class NotificationService {
     }
   }
 
-  AndroidNotificationStyle _getNotificationStyle(
-      String body, NotificationType type) {
+  /// Returns a style information object suitable for Android notifications.
+  ///
+  /// The flutter_local_notifications API expects a [StyleInformation] (or one
+  /// of its Android-specialized subclasses) for the `styleInformation`
+  /// parameter. To avoid type mismatches across platforms and versions, this
+  /// helper returns a [StyleInformation]. For long bodies we return
+  /// [BigTextStyleInformation], otherwise a [DefaultStyleInformation].
+  StyleInformation _getNotificationStyle(String body, NotificationType type) {
     if (body.length > 50) {
       return BigTextStyleInformation(
         body,
@@ -736,7 +773,10 @@ class NotificationService {
         summaryText: 'AFO',
       );
     }
-    return const DefaultStyleInformation(true, true);
+
+    // DefaultStyleInformation's constructor is not const in some versions of
+    // flutter_local_notifications; return a non-const instance to be safe.
+    return DefaultStyleInformation(true, true);
   }
 
   List<int> _getVibrationPattern(NotificationType type) {
@@ -777,14 +817,14 @@ class NotificationService {
 
   void _onTokenRefresh(String token) {
     // Implement token refresh logic
-    // Send new token to your server
-    print('FCM token refreshed: $token');
+  // Send new token to your server
+  debugPrint('FCM token refreshed: $token');
   }
 
   // Cleanup
   void dispose() {
     _onMessageSubscription?.cancel();
     _onMessageOpenedAppSubscription?.cancel();
-    _audioPlayer.dispose();
+  _audioPlayer?.dispose();
   }
 }

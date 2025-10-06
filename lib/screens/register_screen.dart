@@ -11,6 +11,7 @@
 /// - Navigation to login screen for existing users
 /// - Professional blue theme consistent with AFO branding
 /// - Responsive design with proper keyboard handling
+// ignore_for_file: use_build_context_synchronously
 /// 
 /// The screen uses Form widgets for validation and integrates with
 /// AuthService through Provider for user account creation.

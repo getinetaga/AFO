@@ -1,3 +1,4 @@
+// ignore_for_file: unused_field, dead_code
 /// AFO Chat Application - Advanced Call Service
 /// AFO: Afaan Oromoo Chat Services
 /// 
@@ -38,6 +39,7 @@ library;
 
 import 'dart:async';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 /// Enhanced call status with more granular states

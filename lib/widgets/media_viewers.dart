@@ -6,6 +6,7 @@
 /// 
 /// This module provides professional media viewing components for displaying
 /// various types of media content in chat conversations. Features include:
+// ignore_for_file: dangling_library_doc_comments, library_prefixes, unused_field
 /// 
 /// VIEWER COMPONENTS:
 /// • ImageViewerWidget: High-quality image display with zoom/pan capabilities

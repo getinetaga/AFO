@@ -1,3 +1,4 @@
+// ignore_for_file: unused_field, curly_braces_in_flow_control_structures, use_build_context_synchronously
 /// AFO Chat Application - Advanced Call Screen
 /// AFO: Afaan Oromoo Chat Services
 /// 
@@ -33,6 +34,7 @@
 library;
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/admin_models.dart';
 import '../services/admin_service.dart';
 
@@ -294,6 +295,10 @@ class _IssueTrackingScreenState extends State<IssueTrackingScreen> with TickerPr
         color = Colors.green;
         label = 'Resolved';
         break;
+      case ReportStatus.dismissed:
+        color = Colors.grey;
+        label = 'Dismissed';
+        break;
     }
     
     return Chip(
@@ -572,7 +577,7 @@ class _IssueTrackingScreenState extends State<IssueTrackingScreen> with TickerPr
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -586,7 +591,7 @@ class _IssueTrackingScreenState extends State<IssueTrackingScreen> with TickerPr
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(value ?? '-'),
           ),
         ],
       ),
@@ -831,7 +836,8 @@ class _IssueTrackingScreenState extends State<IssueTrackingScreen> with TickerPr
     ) ?? false;
   }
 
-  String _formatDateTime(DateTime dateTime) {
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) return '-';
     return '${dateTime.day}/${dateTime.month}/${dateTime.year} '
            '${dateTime.hour.toString().padLeft(2, '0')}:'
            '${dateTime.minute.toString().padLeft(2, '0')}';
@@ -842,7 +848,4 @@ class _IssueTrackingScreenState extends State<IssueTrackingScreen> with TickerPr
     _tabController.dispose();
     super.dispose();
   }
-}
-
-class ContentReport {
 }

@@ -18,8 +18,8 @@
 // - Persistent storage using SharedPreferences
 // ============================================================================
 
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Comprehensive notification settings model for AFO chat application
 /// 
@@ -599,7 +599,7 @@ class NotificationSettingsManager {
         _cachedSettings = NotificationSettings.fromJson(json);
         return _cachedSettings!;
       } catch (e) {
-        print('Error loading notification settings: $e');
+  debugPrint('Error loading notification settings: $e');
       }
     }
 
@@ -624,7 +624,7 @@ class NotificationSettingsManager {
       }
       return success;
     } catch (e) {
-      print('Error saving notification settings: $e');
+  debugPrint('Error saving notification settings: $e');
       return false;
     }
   }

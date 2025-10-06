@@ -1,5 +1,6 @@
 
 
+// ignore_for_file: use_build_context_synchronously
 /// AFO Chat Application - Profile Screen
 /// AFO: Afaan Oromoo Chat Services
 /// 

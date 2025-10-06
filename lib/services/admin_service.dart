@@ -1,6 +1,9 @@
 // Admin Service for AFO Chat Application
 import 'dart:async';
 import 'dart:math';
+
+import 'package:flutter/foundation.dart';
+
 import '../models/admin_models.dart';
 
 class AdminService {
@@ -51,10 +54,10 @@ class AdminService {
       // Start periodic analytics updates
       _startAnalyticsUpdates();
       
-      print('AdminService: Initialized successfully');
+      debugPrint('AdminService: Initialized successfully');
       return true;
     } catch (e) {
-      print('AdminService: Failed to initialize: $e');
+      debugPrint('AdminService: Failed to initialize: $e');
       return false;
     }
   }
@@ -71,10 +74,11 @@ class AdminService {
     
     // Apply filters
     if (searchQuery != null && searchQuery.isNotEmpty) {
+      final q = searchQuery.toLowerCase();
       users = users.where((user) =>
-          user.username.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          user.email.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          user.displayName.toLowerCase().contains(searchQuery.toLowerCase())).toList();
+          user.username.toLowerCase().contains(q) ||
+          user.email.toLowerCase().contains(q) ||
+          user.displayName.toLowerCase().contains(q)).toList();
     }
     
     if (roleFilter != null) {
@@ -104,11 +108,7 @@ class AdminService {
     return _users[userId];
   }
 
-  Future<AdminActionResult> banUser({
-    required String userId,
-    required String reason,
-    Duration? duration,
-  }) async {
+  Future<AdminActionResult> banUser(String userId, String reason, [Duration? duration]) async {
     if (_currentAdmin == null) {
       return AdminActionResult.failure('No admin authenticated');
     }
@@ -199,7 +199,7 @@ class AdminService {
     }
 
     // Check if current admin can assign this role
-    if (AdminUser._roleLevel(newRole) >= AdminUser._roleLevel(_currentAdmin!.role)) {
+    if (AdminUser.roleLevel(newRole) >= AdminUser.roleLevel(_currentAdmin!.role)) {
       return AdminActionResult.failure('Cannot assign role equal to or higher than your own');
     }
 
@@ -232,16 +232,18 @@ class AdminService {
     var groups = _groups.values.toList();
     
     if (searchQuery != null && searchQuery.isNotEmpty) {
+      final q = searchQuery.toLowerCase();
       groups = groups.where((group) =>
-          group.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          group.description.toLowerCase().contains(searchQuery.toLowerCase())).toList();
+          (group.name ?? '').toLowerCase().contains(q) ||
+          (group.description ?? '').toLowerCase().contains(q)).toList();
     }
     
     if (activeOnly == true) {
-      groups = groups.where((group) => group.isActive).toList();
+      groups = groups.where((group) => group.isActive == true).toList();
     }
     
-    groups.sort((a, b) => b.lastActivityAt.compareTo(a.lastActivityAt));
+  groups.sort((a, b) => (b.lastActivityAt ?? DateTime.fromMillisecondsSinceEpoch(0))
+    .compareTo(a.lastActivityAt ?? DateTime.fromMillisecondsSinceEpoch(0)));
     
     final startIndex = (page - 1) * pageSize;
     final endIndex = startIndex + pageSize;
@@ -285,11 +287,11 @@ class AdminService {
       settings: group.settings,
     );
 
-    final action = ModerationAction(
+      final action = ModerationAction(
       id: 'action_${DateTime.now().millisecondsSinceEpoch}',
       adminId: _currentAdmin!.id,
       adminName: _currentAdmin!.displayName,
-      targetUserId: group.creatorId,
+      targetUserId: group.creatorId ?? '',
       actionType: 'group_delete',
       reason: reason,
       timestamp: DateTime.now(),
@@ -336,11 +338,82 @@ class AdminService {
     );
   }
 
-  Future<AdminActionResult> resolveReport({
-    required String reportId,
-    required String resolution,
-    required ReportStatus newStatus,
-  }) async {
+  // Compatibility wrapper expected by UI: getAllReports
+  Future<List<ContentReport>> getAllReports() async {
+    return _reports.values.toList();
+  }
+
+  // Compatibility wrapper expected by UI: getAllUsers
+  Future<List<AdminUser>> getAllUsers() async {
+    return _users.values.toList();
+  }
+
+  // hasPermission expectation: allow passing AdminPermission or Permission
+  bool hasPermission(AdminUser user, Object permission) {
+    if (permission is AdminPermission) {
+      return user.hasPermission(Permission.values[permission.index]);
+    }
+    if (permission is Permission) return user.hasPermission(permission);
+    return false;
+  }
+
+  Future<AdminActionResult> updateReportStatus(String reportId, ReportStatus newStatus, [String resolution = '']) async {
+    final r = _reports[reportId];
+    if (r == null) return AdminActionResult.failure('Report not found');
+    _reports[reportId] = ContentReport(
+      id: r.id,
+      reporterId: r.reporterId,
+      reporterName: r.reporterName,
+      targetUserId: r.targetUserId,
+      targetUserName: r.targetUserName,
+      messageId: r.messageId,
+      groupId: r.groupId,
+      reportedContentId: r.reportedContentId,
+      type: r.type,
+      reason: r.reason,
+      description: r.description,
+      status: newStatus,
+      priority: r.priority,
+      severity: r.severity,
+      createdAt: r.createdAt,
+      updatedAt: DateTime.now(),
+      resolvedAt: newStatus == ReportStatus.resolved ? DateTime.now() : r.resolvedAt,
+      resolvedBy: _currentAdmin?.displayName,
+      resolution: resolution,
+      contentSnapshot: r.contentSnapshot,
+      evidence: r.evidence,
+      metadata: r.metadata,
+    );
+    _notifyListeners();
+    return AdminActionResult.success('Report updated');
+  }
+
+  Future<AdminActionResult> suspendUser(String userId, String reason, [Duration? duration]) async {
+    final user = _users[userId];
+    if (user == null) return AdminActionResult.failure('User not found');
+    final suspendedUntil = duration != null ? DateTime.now().add(duration) : null;
+    _users[userId] = user.copyWith(status: UserStatus.suspended, suspendedUntil: suspendedUntil, suspensionReason: reason);
+    _notifyListeners();
+    return AdminActionResult.success('User suspended');
+  }
+
+  Future<AdminActionResult> reactivateUser(String userId) async {
+    final user = _users[userId];
+    if (user == null) return AdminActionResult.failure('User not found');
+    _users[userId] = user.copyWith(status: UserStatus.active, suspendedUntil: null, suspensionReason: null);
+    _notifyListeners();
+    return AdminActionResult.success('User reactivated');
+  }
+
+  Future<AdminActionResult> updateUserRole(String userId, UserRole role) async {
+    final user = _users[userId];
+    if (user == null) return AdminActionResult.failure('User not found');
+    _users[userId] = user.copyWith(role: role);
+    _notifyListeners();
+    return AdminActionResult.success('User role updated');
+  }
+
+  Future<AdminActionResult> resolveReport(String reportId, String resolution, [ReportStatus newStatus = ReportStatus.resolved]) async {
     if (_currentAdmin == null) {
       return AdminActionResult.failure('No admin authenticated');
     }
@@ -362,14 +435,17 @@ class AdminService {
       targetUserName: report.targetUserName,
       messageId: report.messageId,
       groupId: report.groupId,
+      reportedContentId: report.reportedContentId,
       type: report.type,
       reason: report.reason,
-      additionalInfo: report.additionalInfo,
+      description: report.description,
       status: newStatus,
+      priority: report.priority,
       severity: report.severity,
       createdAt: report.createdAt,
-      resolvedAt: DateTime.now(),
-      resolvedBy: _currentAdmin!.displayName,
+      updatedAt: DateTime.now(),
+      resolvedAt: newStatus == ReportStatus.resolved ? DateTime.now() : report.resolvedAt,
+      resolvedBy: _currentAdmin?.displayName,
       resolution: resolution,
       contentSnapshot: report.contentSnapshot,
       evidence: report.evidence,
@@ -377,75 +453,65 @@ class AdminService {
     );
 
     _notifyListeners();
-    return AdminActionResult.success('Report resolved successfully');
+    return AdminActionResult.success('Report resolved');
   }
 
-  // Analytics methods
+  // Positional/legacy wrappers used by UI (older code paths)
+  Future<AdminActionResult> resolveReportPositional(String reportId, String resolution) async {
+    return resolveReport(reportId, resolution, ReportStatus.resolved);
+  }
+
+  Future<AdminActionResult> updateReportStatusPositional(String reportId, ReportStatus status) async {
+    return updateReportStatus(reportId, status, '');
+  }
+
+  Future<AdminActionResult> suspendUserPositional(String userId, String reason) async {
+    return suspendUser(userId, reason);
+  }
+
+  Future<AdminActionResult> reactivateUserPositional(String userId) async {
+    return reactivateUser(userId);
+  }
+
+  Future<AdminActionResult> updateUserRolePositional(String userId, UserRole role) async {
+    return updateUserRole(userId, role);
+  }
+
+  // Compute platform analytics (used by UI)
   Future<PlatformAnalytics> getAnalytics() async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final weekAgo = today.subtract(const Duration(days: 7));
     final monthAgo = today.subtract(const Duration(days: 30));
 
-    final activeUsersToday = _users.values
-        .where((user) => user.lastLoginAt.isAfter(today))
-        .length;
-    
-    final activeUsersWeek = _users.values
-        .where((user) => user.lastLoginAt.isAfter(weekAgo))
-        .length;
-        
-    final activeUsersMonth = _users.values
-        .where((user) => user.lastLoginAt.isAfter(monthAgo))
-        .length;
+    final activeUsersToday = _users.values.where((user) => user.lastLoginAt.isAfter(today)).length;
+    final activeUsersWeek = _users.values.where((user) => user.lastLoginAt.isAfter(weekAgo)).length;
+    final activeUsersMonth = _users.values.where((user) => user.lastLoginAt.isAfter(monthAgo)).length;
 
-    final pendingReports = _reports.values
-        .where((report) => report.status == ReportStatus.pending)
-        .length;
-    
-    final resolvedReports = _reports.values
-        .where((report) => report.status == ReportStatus.resolved)
-        .length;
+    final pendingReports = _reports.values.where((report) => report.status == ReportStatus.pending).length;
+    final resolvedReports = _reports.values.where((report) => report.status == ReportStatus.resolved).length;
 
-    final bannedUsers = _users.values
-        .where((user) => user.status == UserStatus.banned)
-        .length;
-    
-    final suspendedUsers = _users.values
-        .where((user) => user.status == UserStatus.suspended)
-        .length;
+    final bannedUsers = _users.values.where((user) => user.status == UserStatus.banned).length;
+    final suspendedUsers = _users.values.where((user) => user.status == UserStatus.suspended).length;
 
-    // User role distribution
     final usersByRole = <String, int>{};
     for (final role in UserRole.values) {
-      usersByRole[role.toString().split('.').last] = _users.values
-          .where((user) => user.role == role)
-          .length;
+      usersByRole[role.toString().split('.').last] = _users.values.where((user) => user.role == role).length;
     }
 
-    // Report type distribution
     final reportsByType = <String, int>{};
     for (final type in ReportType.values) {
-      reportsByType[type.toString().split('.').last] = _reports.values
-          .where((report) => report.type == type)
-          .length;
+      reportsByType[type.toString().split('.').last] = _reports.values.where((report) => report.type == type).length;
     }
 
-    // User registrations by day (last 7 days)
     final userRegistrationsByDay = <String, int>{};
     for (int i = 0; i < 7; i++) {
       final date = today.subtract(Duration(days: i));
       final dateKey = '${date.month}/${date.day}';
-      userRegistrationsByDay[dateKey] = _users.values
-          .where((user) {
-            final createdDate = DateTime(
-              user.createdAt.year,
-              user.createdAt.month,
-              user.createdAt.day,
-            );
-            return createdDate == date;
-          })
-          .length;
+      userRegistrationsByDay[dateKey] = _users.values.where((user) {
+        final createdDate = DateTime(user.createdAt.year, user.createdAt.month, user.createdAt.day);
+        return createdDate == date;
+      }).length;
     }
 
     return PlatformAnalytics(
@@ -454,10 +520,8 @@ class AdminService {
       activeUsersWeek: activeUsersWeek,
       activeUsersMonth: activeUsersMonth,
       totalGroups: _groups.length,
-      totalMessages: _users.values
-          .map((user) => user.metadata['messagesCount'] ?? 0)
-          .fold<int>(0, (sum, count) => sum + count),
-      messagestoday: Random().nextInt(500), // Mock data
+      totalMessages: _users.values.map((u) => (u.metadata?['messagesCount'] ?? 0) as int).fold<int>(0, (s, c) => s + c),
+      messagestoday: Random().nextInt(500),
       pendingReports: pendingReports,
       resolvedReports: resolvedReports,
       bannedUsers: bannedUsers,
@@ -472,9 +536,9 @@ class AdminService {
   // Authentication methods
   Future<AdminActionResult> authenticate(String username, String password) async {
     // Mock authentication
-    final admin = _users.values
-        .where((user) => user.username == username && user.role != UserRole.user)
-        .firstOrNull;
+  final admin = _users.values
+    .where((user) => user.username == username && user.role != UserRole.user)
+    .firstOrNull;
 
     if (admin == null) {
       return AdminActionResult.failure('Invalid credentials');
@@ -487,7 +551,7 @@ class AdminService {
     _currentAdmin = admin;
     
     // Update last login
-    _users[admin.id] = admin.copyWith(lastLoginAt: DateTime.now());
+  _users[admin.id] = admin.copyWith(lastLoginAt: DateTime.now());
     
     return AdminActionResult.success('Authentication successful', data: admin.toJson());
   }
@@ -708,9 +772,9 @@ class AdminService {
   }
 }
 
-extension on Iterable {
+extension FirstOrNullExtension<T> on Iterable<T> {
   T? get firstOrNull {
     if (isEmpty) return null;
-    return first as T;
+    return first;
   }
 }

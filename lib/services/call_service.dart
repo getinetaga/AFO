@@ -115,7 +115,7 @@ class CallService {
   /// Mock permission check (always returns true for demo)
   Future<bool> requestPermissions({required bool isVideo}) async {
     debugPrint('📱 ${isVideo ? 'Camera and microphone' : 'Microphone'} permissions granted (mock)');
-    await Future.delayed(const Duration(milliseconds: 500)); // Simulate permission request
+    // No delay in tests - permissions are granted immediately in mock
     return true;
   }
 
@@ -139,7 +139,7 @@ class CallService {
 
     // Update status to connecting
     _status = CallStatus.connecting;
-    _statusController.add(_status);
+  if (!_statusController.isClosed) _statusController.add(_status);
 
     // Create call info
     final callId = 'call_${DateTime.now().millisecondsSinceEpoch}';
@@ -156,8 +156,8 @@ class CallService {
     await Future.delayed(const Duration(seconds: 2));
 
     // Update status to connected
-    _status = CallStatus.connected;
-    _statusController.add(_status);
+  _status = CallStatus.connected;
+  if (!_statusController.isClosed) _statusController.add(_status);
     
     // Start call duration timer
     _startCallTimer();
@@ -171,24 +171,22 @@ class CallService {
 
     debugPrint('📴 Ending call...');
     
-    _status = CallStatus.disconnecting;
-    _statusController.add(_status);
+  _status = CallStatus.disconnecting;
+  if (!_statusController.isClosed) _statusController.add(_status);
 
     // Stop call timer
     _stopCallTimer();
 
-    // Simulate disconnection delay
-    await Future.delayed(const Duration(milliseconds: 500));
+  // End call immediately (no artificial delay to keep tests deterministic)
+  // Reset state
+  _status = CallStatus.idle;
+  _currentCall = null;
+  _callDuration = Duration.zero;
 
-    // Reset state
-    _status = CallStatus.idle;
-    _currentCall = null;
-    _callDuration = Duration.zero;
-
-    // Notify listeners
-    _statusController.add(_status);
-    _callInfoController.add(_currentCall);
-    _durationController.add(_callDuration);
+  // Notify listeners if still open
+  if (!_statusController.isClosed) _statusController.add(_status);
+  if (!_callInfoController.isClosed) _callInfoController.add(_currentCall);
+  if (!_durationController.isClosed) _durationController.add(_callDuration);
 
     debugPrint('✅ Call ended');
   }

@@ -1,3 +1,5 @@
+// ignore_for_file: dangling_library_doc_comments
+// ignore_for_file: unused_field, curly_braces_in_flow_control_structures
 /// AFO Chat Application - Advanced Chat Service
 /// AFO: Afaan Oromoo Chat Services
 /// 
@@ -493,9 +495,9 @@ class ChatService {
   Future<void> _initializeNotifications() async {
     try {
       await _notificationManager.initialize();
-      print('ChatService: Notifications initialized');
+  debugPrint('ChatService: Notifications initialized');
     } catch (e) {
-      print('ChatService: Failed to initialize notifications: $e');
+  debugPrint('ChatService: Failed to initialize notifications: $e');
     }
   }
 
@@ -530,7 +532,7 @@ class ChatService {
       final encrypted = encrypter.encrypt(message, iv: _iv);
       return encrypted.base64;
     } catch (e) {
-      print('Encryption error: $e');
+  debugPrint('Encryption error: $e');
       return message; // Fallback to plain text for mock
     }
   }
@@ -545,7 +547,7 @@ class ChatService {
       final encrypted = Encrypted.fromBase64(encryptedMessage);
       return encrypter.decrypt(encrypted, iv: _iv);
     } catch (e) {
-      print('Decryption error: $e');
+  debugPrint('Decryption error: $e');
       return encryptedMessage; // Fallback for mock
     }
   }
@@ -824,7 +826,7 @@ class ChatService {
           final decryptedContent = _decryptMessage(message.encryptedContent!, chatRoomId);
           return message.copyWith(content: decryptedContent);
         } catch (e) {
-          print('Error decrypting message: $e');
+          debugPrint('Error decrypting message: $e');
           return message; // Return original if decryption fails
         }
       }
@@ -1586,7 +1588,7 @@ class ChatService {
         );
       }
     } catch (e) {
-      print('Failed to trigger message notification: $e');
+  debugPrint('Failed to trigger message notification: $e');
     }
   }
 
@@ -1607,37 +1609,18 @@ class ChatService {
         callerAvatar: callerAvatar,
       );
     } catch (e) {
-      print('Failed to trigger call notification: $e');
+  debugPrint('Failed to trigger call notification: $e');
     }
   }
 
-  // Trigger group activity notification
-  Future<void> _triggerGroupActivityNotification({
-    required String groupName,
-    required String groupId,
-    required String activity,
-    required String actorName,
-    required String actorId,
-  }) async {
-    try {
-      await _notificationManager.showGroupActivityNotification(
-        groupName: groupName,
-        groupId: groupId,
-        activity: activity,
-        actorName: actorName,
-        actorId: actorId,
-      );
-    } catch (e) {
-      print('Failed to trigger group activity notification: $e');
-    }
-  }
+  // ... group activity notification helper removed (unused)
 
   // Clear notifications for chat
   Future<void> clearNotificationsForChat(String chatRoomId) async {
     try {
       await _notificationManager.clearNotificationsForChat(chatRoomId);
     } catch (e) {
-      print('Failed to clear notifications for chat: $e');
+  debugPrint('Failed to clear notifications for chat: $e');
     }
   }
 
@@ -1646,7 +1629,7 @@ class ChatService {
     try {
       await _notificationManager.clearAllNotifications();
     } catch (e) {
-      print('Failed to clear all notifications: $e');
+  debugPrint('Failed to clear all notifications: $e');
     }
   }
 
@@ -1655,7 +1638,7 @@ class ChatService {
     try {
       await _notificationManager.refreshSettings();
     } catch (e) {
-      print('Failed to refresh notification settings: $e');
+  debugPrint('Failed to refresh notification settings: $e');
     }
   }
 }

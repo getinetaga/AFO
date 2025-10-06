@@ -53,7 +53,9 @@ class AuthService extends ChangeNotifier {
   Map<String, dynamic>? _user;
   
   /// Loading state indicator
-  bool isLoading = true;
+  /// Default to false for lightweight unit tests that construct the service
+  /// without calling `init()`.
+  bool isLoading = false;
 
   /// Token expiry management timer
   Timer? _refreshTimer;
@@ -116,7 +118,7 @@ class AuthService extends ChangeNotifier {
       await Future.delayed(const Duration(seconds: 1));
       
       // Mock successful registration - in production, make actual API call
-      print('✅ Mock registration successful for: $email');
+  debugPrint('✅ Mock registration successful for: $email');
       return;
       
       // Uncomment below and comment above when you have a backend server:
@@ -136,7 +138,7 @@ class AuthService extends ChangeNotifier {
       }
       */
     } catch (e) {
-      print('❌ Registration error: $e');
+  debugPrint('❌ Registration error: $e');
       throw Exception('Registration failed: $e');
     }
   }
@@ -162,7 +164,7 @@ class AuthService extends ChangeNotifier {
       await _secureStorage.write(key: 'user', value: jsonEncode(_user));
       
       notifyListeners();
-      print('✅ Mock login successful for: $email');
+  debugPrint('✅ Mock login successful for: $email');
       return;
       
       // Uncomment below and comment above when you have a backend server:
@@ -190,7 +192,7 @@ class AuthService extends ChangeNotifier {
       }
       */
     } catch (e) {
-      print('❌ Login error: $e');
+  debugPrint('❌ Login error: $e');
       throw Exception('Login failed: $e');
     }
   }
@@ -264,13 +266,13 @@ class AuthService extends ChangeNotifier {
         throw Exception('Google sign-in was cancelled by user');
       }
       
-      print('✅ Google Sign-in successful!');
-      print('📧 Email: ${account.email}');
-      print('👤 Display Name: ${account.displayName}');
+  debugPrint('✅ Google Sign-in successful!');
+  debugPrint('📧 Email: ${account.email}');
+  debugPrint('👤 Display Name: ${account.displayName}');
       
       final auth = await account.authentication;
-      print('🔑 Has Access Token: ${auth.accessToken != null}');
-      print('🎫 Has ID Token: ${auth.idToken != null}');
+  debugPrint('🔑 Has Access Token: ${auth.accessToken != null}');
+  debugPrint('🎫 Has ID Token: ${auth.idToken != null}');
       
       // For testing, we'll create a mock user without calling backend
       _user = {
@@ -284,10 +286,10 @@ class AuthService extends ChangeNotifier {
       _accessToken = 'test_access_token_${DateTime.now().millisecondsSinceEpoch}';
       
       notifyListeners();
-      print('🎉 Test authentication complete!');
+  debugPrint('🎉 Test authentication complete!');
       
     } catch (e) {
-      print('❌ Google Sign-in test failed: $e');
+  debugPrint('❌ Google Sign-in test failed: $e');
       await _googleSignIn.signOut();
       rethrow;
     }
