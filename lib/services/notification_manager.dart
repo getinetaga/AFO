@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 
@@ -444,11 +444,12 @@ class NotificationManager {
 
   void _updateAppBadge() {
     // Update app icon badge (platform specific implementation needed)
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       // iOS badge update
       // FlutterLocalNotificationsPlugin can handle this
     } else if (Platform.isAndroid) {
       // Android badge update (requires additional plugin)
+    } else if (!kIsWeb && Platform.isAndroid) {
       // flutter_app_badger or similar
     }
   }

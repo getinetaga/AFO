@@ -49,7 +49,7 @@ library;
 
 
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' show Platform;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -226,7 +226,7 @@ class NotificationService {
     );
 
     // Create notification channels for Android
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       await _createNotificationChannels();
     }
   }

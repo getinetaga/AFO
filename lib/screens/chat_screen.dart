@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 
 import '../services/advanced_call_service.dart';
 import '../services/chat_service.dart';
+import '../services/chat_theme_service.dart';
 import '../services/media_upload_service.dart';
 import '../widgets/media_picker.dart';
 import '../widgets/media_viewers.dart';
@@ -45,6 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
+  final ChatThemeService _themeService = ChatThemeService();
   final MediaUploadService _mediaUploadService = MediaUploadService();
   List<ChatMessage> _messages = [];
   bool _isGroupChat = false;
@@ -139,7 +141,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+  final theme = _themeService.notifier.value;
+
+  return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
@@ -172,8 +176,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
+  backgroundColor: theme.appBarColor,
+  foregroundColor: theme.outgoingText,
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
@@ -205,6 +209,16 @@ class _ChatScreenState extends State<ChatScreen> {
               );
             },
           ),
+          PopupMenuButton<ChatTheme>(
+            icon: const Icon(Icons.color_lens),
+            onSelected: (t) async {
+              await _themeService.setTheme(t);
+              if (mounted) setState(() {});
+            },
+            itemBuilder: (context) => _themeService.presets
+                .map((t) => PopupMenuItem(value: t, child: Text(t.name)))
+                .toList(),
+          ),
         ],
       ),
       body: Column(
@@ -212,7 +226,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: theme.background,
               ),
               child: Column(
                 children: [
@@ -317,7 +331,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isMe ? Colors.blue.shade700 : Colors.white,
+                  color: isMe ? _themeService.notifier.value.outgoingBubble : _themeService.notifier.value.incomingBubble,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -358,7 +372,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         Text(
                           message.content,
                           style: TextStyle(
-                            color: isMe ? Colors.white : Colors.black87,
+                            color: isMe ? _themeService.notifier.value.outgoingText : _themeService.notifier.value.incomingText,
                             fontSize: 16,
                             fontStyle: message.metadata?['deleted'] == true 
                                 ? FontStyle.italic 
