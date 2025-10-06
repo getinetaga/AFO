@@ -131,10 +131,13 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _localNotifications = 
-      FlutterLocalNotificationsPlugin();
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  FlutterLocalNotificationsPlugin? _localNotifications;
+
+  // Don't fetch FirebaseMessaging.instance at module load time — tests may not
+  // have Firebase initialized. Resolve the instance lazily when needed.
+  FirebaseMessaging get _firebaseMessaging => FirebaseMessaging.instance;
+
+  AudioPlayer? _audioPlayer;
   
   bool _isInitialized = false;
   String? _fcmToken;
@@ -199,6 +202,8 @@ class NotificationService {
 
   // Initialize local notifications
   Future<void> _initializeLocalNotifications() async {
+    _localNotifications ??= FlutterLocalNotificationsPlugin();
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -215,7 +220,7 @@ class NotificationService {
       iOS: initializationSettingsIOS,
     );
 
-    await _localNotifications.initialize(
+      await _localNotifications!.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
@@ -271,12 +276,13 @@ class NotificationService {
       ),
     ];
 
-    for (final channel in channels) {
-      await _localNotifications
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
-    }
+  for (final channel in channels) {
+    await _localNotifications
+      ?.
+      resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+  }
   }
 
   // Initialize Firebase messaging
@@ -401,13 +407,15 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _localNotifications.show(
+      if (_localNotifications != null) {
+        await _localNotifications!.show(
       notificationId,
       title,
       body,
       details,
       payload: payload != null ? _encodePayload(payload) : null,
     );
+      }
 
     // Play custom sound and vibration
     await _playNotificationEffects(notificationType);
@@ -535,12 +543,12 @@ class NotificationService {
 
   // Cancel notification
   Future<void> cancelNotification(int notificationId) async {
-    await _localNotifications.cancel(notificationId);
+  if (_localNotifications != null) await _localNotifications!.cancel(notificationId);
   }
 
   // Cancel all notifications
   Future<void> cancelAllNotifications() async {
-    await _localNotifications.cancelAll();
+  if (_localNotifications != null) await _localNotifications!.cancelAll();
   }
 
   // Handle notification tap
@@ -629,11 +637,12 @@ class NotificationService {
     
     final soundFile = _getSoundFile(type);
     if (soundFile != null) {
-      try {
-        await _audioPlayer.play(AssetSource(soundFile));
-      } catch (e) {
-        debugPrint('Error playing sound: $e');
-      }
+        _audioPlayer ??= AudioPlayer();
+        try {
+          await _audioPlayer!.play(AssetSource(soundFile));
+        } catch (e) {
+          debugPrint('Error playing sound: $e');
+        }
     }
   }
 
@@ -816,6 +825,6 @@ class NotificationService {
   void dispose() {
     _onMessageSubscription?.cancel();
     _onMessageOpenedAppSubscription?.cancel();
-    _audioPlayer.dispose();
+  _audioPlayer?.dispose();
   }
 }

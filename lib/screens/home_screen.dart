@@ -74,6 +74,13 @@ class _HomeScreenState extends State<HomeScreen> {
         /// AFO Chat Application - Home Screen (Main Chat List)
         /// AFO: Afaan Oromoo Chat Services
         actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              await auth.logout();
+            },
+            tooltip: 'Logout',
+          ),
           PopupMenuButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             itemBuilder: (context) => [

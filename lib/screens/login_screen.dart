@@ -43,6 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
   /// User input fields
   String _email = '';
   String _password = '';
+  // Controllers to ensure we reliably capture typed input
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
   
   /// UI state management
   bool _loading = false;
@@ -117,8 +120,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             fillColor: Colors.grey.shade50,
                           ),
                           keyboardType: TextInputType.emailAddress,
+                          controller: _emailController,
                           onSaved: (v) => _email = v!.trim(),
-                          validator: (v) => v != null && v.contains('@') ? null : 'Enter a valid email',
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Please enter your email';
+                            if (!v.contains('@')) return 'Enter a valid email';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -136,8 +144,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             fillColor: Colors.grey.shade50,
                           ),
                           obscureText: true,
+                          controller: _passwordController,
                           onSaved: (v) => _password = v ?? '',
-                          validator: (v) => (v != null && v.length >= 6) ? null : 'Min 6 chars',
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Please enter your password';
+                            if (v.length < 6) return 'Min 6 chars';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 24),
                         if (_error != null) 
@@ -169,7 +182,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: _loading ? null : () async {
                               final form = _formKey.currentState!;
                               if (!form.validate()) return;
+                              // Prefer reading directly from controllers to avoid any
+                              // timing issues with onSaved; still call save for
+                              // completeness.
                               form.save();
+                              _email = _emailController.text.trim();
+                              _password = _passwordController.text;
                               setState(() { _loading = true; _error = null; });
                               try {
                                 await auth.login(email: _email, password: _password);
@@ -304,4 +322,19 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: _email);
+    _passwordController = TextEditingController(text: _password);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
 }

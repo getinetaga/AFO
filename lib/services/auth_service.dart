@@ -53,7 +53,9 @@ class AuthService extends ChangeNotifier {
   Map<String, dynamic>? _user;
   
   /// Loading state indicator
-  bool isLoading = true;
+  /// Default to false for lightweight unit tests that construct the service
+  /// without calling `init()`.
+  bool isLoading = false;
 
   /// Token expiry management timer
   Timer? _refreshTimer;
