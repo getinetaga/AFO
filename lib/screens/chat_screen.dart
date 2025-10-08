@@ -26,6 +26,7 @@ import '../services/chat_theme_service.dart';
 import '../services/media_upload_service.dart';
 import '../widgets/media_picker.dart';
 import '../widgets/media_viewers.dart';
+import '../widgets/swipable_message_bubble.dart';
 import 'advanced_call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -295,7 +296,8 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
     
-    return Padding(
+    // Regular message bubbles with swipe functionality
+    final messageBubbleContent = Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -361,6 +363,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     const SizedBox(height: 4),
                   ],
+                  // Reply context
+                  if (message.replyToMessageId != null)
+                    _buildReplyContext(message, isMe),
                   // Media content
                   if (message.mediaAttachment != null)
                     _buildMediaContent(message),
@@ -438,6 +443,15 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ],
       ),
+    );
+
+    // Wrap with swipe functionality
+    return SwipableMessageBubble(
+      message: message,
+      isMe: isMe,
+      onReply: (message) => _handleReplyAction(message),
+      onMoreActions: (message) => _showMessageOptions(context, message),
+      child: messageBubbleContent,
     );
   }
 
@@ -631,6 +645,169 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  /// Builds the reply context widget for messages that are replies.
+  /// 
+  /// This widget shows a preview of the original message being replied to,
+  /// including the sender name and a snippet of the content. It provides
+  /// visual context for reply threads.
+  /// 
+  /// [message] The reply message
+  /// [isMe] Whether the reply message was sent by the current user
+  /// Returns a widget showing the replied-to message context
+  Widget _buildReplyContext(ChatMessage message, bool isMe) {
+    final repliedToMessage = _chatService.getRepliedToMessage(message);
+    
+    if (repliedToMessage == null) {
+      // Message being replied to not found (maybe deleted)
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: (isMe ? Colors.white : Colors.grey.shade800).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border(
+            left: BorderSide(
+              color: Colors.grey.shade400,
+              width: 3,
+            ),
+          ),
+        ),
+        child: Text(
+          'Original message deleted',
+          style: TextStyle(
+            color: (isMe ? Colors.white : Colors.grey.shade600).withOpacity(0.7),
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    // Get the content to display (handle different message types)
+    String displayContent;
+    IconData? contentIcon;
+    
+    if (repliedToMessage.type == MessageType.text) {
+      displayContent = repliedToMessage.content;
+    } else {
+      // For media messages, show the media type
+      contentIcon = _getMediaIcon(repliedToMessage.type);
+      displayContent = _getMediaTypeLabel(repliedToMessage.type);
+    }
+
+    // Limit the displayed content length
+    if (displayContent.length > 50) {
+      displayContent = '${displayContent.substring(0, 50)}...';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: (isMe ? Colors.white : Colors.grey.shade800).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            color: _getAvatarColor(repliedToMessage.senderName),
+            width: 3,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Original sender name
+          Text(
+            repliedToMessage.senderName,
+            style: TextStyle(
+              color: _getAvatarColor(repliedToMessage.senderName),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          // Original message content
+          Row(
+            children: [
+              if (contentIcon != null) ...[
+                Icon(
+                  contentIcon,
+                  size: 14,
+                  color: (isMe ? Colors.white : Colors.grey.shade600).withOpacity(0.7),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Flexible(
+                child: Text(
+                  displayContent,
+                  style: TextStyle(
+                    color: (isMe ? Colors.white : Colors.grey.shade600).withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Gets the appropriate icon for different media types
+  IconData _getMediaIcon(MessageType type) {
+    switch (type) {
+      case MessageType.image:
+        return Icons.image;
+      case MessageType.video:
+        return Icons.videocam;
+      case MessageType.audio:
+        return Icons.audiotrack;
+      case MessageType.document:
+        return Icons.description;
+      case MessageType.location:
+        return Icons.location_on;
+      case MessageType.contact:
+        return Icons.contact_phone;
+      case MessageType.sticker:
+        return Icons.emoji_emotions;
+      case MessageType.gif:
+        return Icons.gif;
+      case MessageType.voiceNote:
+        return Icons.mic;
+      default:
+        return Icons.message;
+    }
+  }
+
+  /// Gets the display label for different media types
+  String _getMediaTypeLabel(MessageType type) {
+    switch (type) {
+      case MessageType.image:
+        return 'Photo';
+      case MessageType.video:
+        return 'Video';
+      case MessageType.audio:
+        return 'Audio';
+      case MessageType.document:
+        return 'Document';
+      case MessageType.location:
+        return 'Location';
+      case MessageType.contact:
+        return 'Contact';
+      case MessageType.sticker:
+        return 'Sticker';
+      case MessageType.gif:
+        return 'GIF';
+      case MessageType.voiceNote:
+        return 'Voice Note';
+      default:
+        return 'Message';
+    }
+  }
+
   // Build media content for messages
   Widget _buildMediaContent(ChatMessage message) {
     final mediaAttachment = message.mediaAttachment!;
@@ -726,6 +903,191 @@ class _ChatScreenState extends State<ChatScreen> {
       _activeUploads.remove(uploadId);
       _uploadProgress.remove(uploadId);
     });
+  }
+
+  /// Handles the reply action triggered by swiping on a message.
+  /// 
+  /// This method shows a reply interface where the user can compose
+  /// a reply to the specified message. It displays the original message
+  /// context and allows the user to send a reply.
+  /// 
+  /// [originalMessage] The message being replied to
+  void _handleReplyAction(ChatMessage originalMessage) {
+    // Show a dialog or bottom sheet for composing the reply
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildReplyInterface(originalMessage),
+    );
+  }
+
+  /// Builds the reply interface widget.
+  /// 
+  /// Creates a modal interface that shows the original message context
+  /// and provides an input field for composing a reply message.
+  /// 
+  /// [originalMessage] The message being replied to
+  /// Returns a widget for the reply interface
+  Widget _buildReplyInterface(ChatMessage originalMessage) {
+    final replyController = TextEditingController();
+    
+    return Container(
+      margin: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Title
+            const Text(
+              'Reply to message',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Original message context
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border(
+                  left: BorderSide(
+                    color: _getAvatarColor(originalMessage.senderName),
+                    width: 3,
+                  ),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    originalMessage.senderName,
+                    style: TextStyle(
+                      color: _getAvatarColor(originalMessage.senderName),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    originalMessage.content.length > 100 
+                        ? '${originalMessage.content.substring(0, 100)}...'
+                        : originalMessage.content,
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Reply input
+            TextField(
+              controller: replyController,
+              decoration: InputDecoration(
+                hintText: 'Type your reply...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+              maxLines: 3,
+              minLines: 1,
+              textCapitalization: TextCapitalization.sentences,
+              autofocus: true,
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    replyController.dispose();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    final replyText = replyController.text.trim();
+                    if (replyText.isEmpty) {
+                      _showError('Reply cannot be empty');
+                      return;
+                    }
+                    
+                    try {
+                      // Send the reply using the chat service
+                      await _chatService.sendReplyMessage(
+                        originalMessage: originalMessage,
+                        replyContent: replyText,
+                      );
+                      
+                      // Close the interface
+                      replyController.dispose();
+                      Navigator.pop(context);
+                      
+                      // Show success feedback
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Reply sent'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      _showError('Failed to send reply: $e');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Send'),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   // Show error message
