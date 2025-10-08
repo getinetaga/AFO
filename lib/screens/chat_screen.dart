@@ -98,21 +98,27 @@ class _ChatScreenState extends State<ChatScreen> {
     String text = _controller.text.trim();
     if (text.isEmpty) return;
 
+    debugPrint('🟢 _sendMessage called with text: $text, isGroupChat: $_isGroupChat, contactId: ${widget.contactId}');
+
     _controller.clear();
     
     try {
       if (_isGroupChat) {
+        debugPrint('🟡 Sending group message...');
         await _chatService.sendGroupMessage(
           groupId: widget.contactId,
           message: text,
           type: MessageType.text,
         );
+        debugPrint('🟢 Group message sent successfully');
       } else {
+        debugPrint('🟡 Sending direct message...');
         await _chatService.sendMessage(
           receiverId: widget.contactId,
           message: text,
           type: MessageType.text,
         );
+        debugPrint('🟢 Direct message sent successfully');
       }
       
       // Auto-scroll to bottom after sending
@@ -124,6 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     } catch (e) {
+      debugPrint('🔴 Error sending message: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to send message: $e')),

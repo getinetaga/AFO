@@ -543,15 +543,34 @@ class ChatService {
     Map<String, dynamic>? metadata,
     MediaAttachment? mediaAttachment,
   }) async {
-    if (_currentUserId == null) throw Exception('User not authenticated');
+    debugPrint('🟢 sendGroupMessage called - groupId: $groupId, message: $message');
+    debugPrint('🟢 Current user: $_currentUserId');
+    debugPrint('🟢 Available chatRooms: ${_chatRooms.keys}');
+    
+    if (_currentUserId == null) {
+      debugPrint('🔴 User not authenticated');
+      throw Exception('User not authenticated');
+    }
+    
     final chatRoom = _chatRooms[groupId];
-    if (chatRoom == null) throw Exception('Group chat not found');
-    if (!chatRoom.participantIds.contains(_currentUserId)) throw Exception('You are not a member of this group');
+    if (chatRoom == null) {
+      debugPrint('🔴 Group chat not found for groupId: $groupId');
+      throw Exception('Group chat not found');
+    }
+    
+    debugPrint('🟡 Found chatRoom: ${chatRoom.name}, participants: ${chatRoom.participantIds}');
+    
+    if (!chatRoom.participantIds.contains(_currentUserId)) {
+      debugPrint('🔴 User $_currentUserId not a member of group. Participants: ${chatRoom.participantIds}');
+      throw Exception('You are not a member of this group');
+    }
 
     final timestamp = DateTime.now();
     final messageId = '${timestamp.millisecondsSinceEpoch}_${Random().nextInt(1000)}';
     final encryptedContent = _encryptMessage(message, groupId);
 
+    debugPrint('🟡 Creating ChatMessage with id: $messageId');
+    
     final chatMessage = ChatMessage(
       id: messageId,
       senderId: _currentUserId!,
@@ -569,11 +588,20 @@ class ChatService {
       mediaDuration: mediaAttachment?.duration,
     );
 
+    debugPrint('🟡 Adding message to messages list');
     _messages[groupId] ??= [];
     _messages[groupId]!.add(chatMessage);
+    
+    debugPrint('🟡 Updating chat room');
     await _updateChatRoom(groupId, chatMessage);
+    
+    debugPrint('🟡 Simulating message delivery');
     _simulateGroupMessageDelivery(messageId, groupId, chatRoom.participantIds);
+    
+    debugPrint('🟡 Notifying message update');
     _notifyMessageUpdate(groupId);
+    
+    debugPrint('🟢 sendGroupMessage completed successfully');
     return chatMessage;
   }
 
