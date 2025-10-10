@@ -543,15 +543,34 @@ class ChatService {
     Map<String, dynamic>? metadata,
     MediaAttachment? mediaAttachment,
   }) async {
-    if (_currentUserId == null) throw Exception('User not authenticated');
+    debugPrint('🟢 sendGroupMessage called - groupId: $groupId, message: $message');
+    debugPrint('🟢 Current user: $_currentUserId');
+    debugPrint('🟢 Available chatRooms: ${_chatRooms.keys}');
+    
+    if (_currentUserId == null) {
+      debugPrint('🔴 User not authenticated');
+      throw Exception('User not authenticated');
+    }
+    
     final chatRoom = _chatRooms[groupId];
-    if (chatRoom == null) throw Exception('Group chat not found');
-    if (!chatRoom.participantIds.contains(_currentUserId)) throw Exception('You are not a member of this group');
+    if (chatRoom == null) {
+      debugPrint('🔴 Group chat not found for groupId: $groupId');
+      throw Exception('Group chat not found');
+    }
+    
+    debugPrint('🟡 Found chatRoom: ${chatRoom.name}, participants: ${chatRoom.participantIds}');
+    
+    if (!chatRoom.participantIds.contains(_currentUserId)) {
+      debugPrint('🔴 User $_currentUserId not a member of group. Participants: ${chatRoom.participantIds}');
+      throw Exception('You are not a member of this group');
+    }
 
     final timestamp = DateTime.now();
     final messageId = '${timestamp.millisecondsSinceEpoch}_${Random().nextInt(1000)}';
     final encryptedContent = _encryptMessage(message, groupId);
 
+    debugPrint('🟡 Creating ChatMessage with id: $messageId');
+    
     final chatMessage = ChatMessage(
       id: messageId,
       senderId: _currentUserId!,
@@ -569,11 +588,20 @@ class ChatService {
       mediaDuration: mediaAttachment?.duration,
     );
 
+    debugPrint('🟡 Adding message to messages list');
     _messages[groupId] ??= [];
     _messages[groupId]!.add(chatMessage);
+    
+    debugPrint('🟡 Updating chat room');
     await _updateChatRoom(groupId, chatMessage);
+    
+    debugPrint('🟡 Simulating message delivery');
     _simulateGroupMessageDelivery(messageId, groupId, chatRoom.participantIds);
+    
+    debugPrint('🟡 Notifying message update');
     _notifyMessageUpdate(groupId);
+    
+    debugPrint('🟢 sendGroupMessage completed successfully');
     return chatMessage;
   }
 
@@ -908,6 +936,113 @@ class ChatService {
       return timeSinceMessage.inHours <= 1;
     }
     return true;
+  }
+
+  /// Gets the message that another message is replying to.
+  /// 
+  /// Returns the original message if the [message] has a [replyToMessageId],
+  /// null otherwise. This is used to display reply context in the UI.
+  /// 
+  /// [message] The message that might be a reply
+  /// Returns the original message being replied to, or null
+  ChatMessage? getRepliedToMessage(ChatMessage message) {
+    if (message.replyToMessageId == null) return null;
+    
+    final messages = _messages[message.chatRoomId];
+    if (messages == null) return null;
+    
+    try {
+      return messages.firstWhere(
+        (m) => m.id == message.replyToMessageId,
+      );
+    } catch (e) {
+      // Message not found
+      return null;
+    }
+  }
+
+  /// Gets a message by its ID from the specified chat room.
+  /// 
+  /// This is useful for getting the original message when displaying
+  /// reply context or when performing operations on specific messages.
+  /// 
+  /// [messageId] The unique identifier of the message
+  /// [chatRoomId] The chat room containing the message
+  /// Returns the message if found, null otherwise
+  ChatMessage? getMessageById(String messageId, String chatRoomId) {
+    final messages = _messages[chatRoomId];
+    if (messages == null) return null;
+    
+    try {
+      return messages.firstWhere((m) => m.id == messageId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Sends a reply message to another message.
+  /// 
+  /// This is a convenience method that wraps [sendMessage] or [sendGroupMessage]
+  /// with the reply functionality. It automatically sets the [replyToMessageId]
+  /// parameter.
+  /// 
+  /// [originalMessage] The message being replied to
+  /// [replyContent] The content of the reply
+  /// [type] The type of message (default: text)
+  /// [mediaAttachment] Optional media attachment for the reply
+  /// Returns the created reply message
+  Future<ChatMessage> sendReplyMessage({
+    required ChatMessage originalMessage,
+    required String replyContent,
+    MessageType type = MessageType.text,
+    MediaAttachment? mediaAttachment,
+  }) async {
+    if (_currentUserId == null) throw Exception('User not authenticated');
+
+    // Determine if this is a group chat or direct chat
+    final chatRoom = _chatRooms[originalMessage.chatRoomId];
+    final isGroupChat = chatRoom?.type == ChatType.group;
+
+    if (isGroupChat) {
+      return await sendGroupMessage(
+        groupId: originalMessage.chatRoomId,
+        message: replyContent,
+        type: type,
+        replyToMessageId: originalMessage.id,
+        mediaAttachment: mediaAttachment,
+      );
+    } else {
+      // For direct messages, we need to determine the receiver
+      // It's the other participant in the chat room
+      final otherParticipantId = originalMessage.senderId == _currentUserId 
+          ? _extractReceiverFromChatRoomId(originalMessage.chatRoomId, _currentUserId!)
+          : originalMessage.senderId;
+
+      return await sendMessage(
+        receiverId: otherParticipantId,
+        message: replyContent,
+        type: type,
+        replyToMessageId: originalMessage.id,
+        mediaAttachment: mediaAttachment,
+      );
+    }
+  }
+
+  /// Extracts the receiver ID from a chat room ID for direct messages.
+  /// 
+  /// Chat room IDs for direct messages are typically formatted as
+  /// "user1_user2" where the IDs are sorted. This method extracts
+  /// the other participant's ID.
+  /// 
+  /// [chatRoomId] The chat room identifier
+  /// [currentUserId] The current user's identifier
+  /// Returns the other participant's ID
+  String _extractReceiverFromChatRoomId(String chatRoomId, String currentUserId) {
+    final parts = chatRoomId.split('_');
+    if (parts.length == 2) {
+      return parts[0] == currentUserId ? parts[1] : parts[0];
+    }
+    throw Exception('Invalid chat room ID format for direct message');
   }
 
   void dispose() {
