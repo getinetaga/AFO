@@ -756,12 +756,9 @@ class NotificationManager {
     if (!kIsWeb && Platform.isIOS) {
       // iOS has native badge support through the notification plugin
       // Implementation would use FlutterLocalNotificationsPlugin
-    } else if (Platform.isAndroid) {
+    } else if (!kIsWeb && Platform.isAndroid) {
       // Android badge updates require additional plugins
       // Implementation would use flutter_app_badger or similar
-    } else if (!kIsWeb && Platform.isAndroid) {
-      // Alternative Android badge implementation
-      // Could use flutter_app_badger or other badge plugins
     }
     // Note: Actual implementation depends on chosen badge plugin
   }
