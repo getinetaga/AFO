@@ -1,0 +1,70 @@
+name: Backend SonarQube Analysis
+
+on:
+  push:
+    branches: [ main, develop, upgrade/deps-major ]
+    paths: [ 'backend/**' ]
+  pull_request:
+    branches: [ main, develop ]
+    paths: [ 'backend/**' ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  backend-sonarqube:
+    name: Backend Code Quality Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run ESLint
+      run: npm run lint
+    
+    - name: Run TypeScript compilation check
+      run: npx tsc --noEmit
+    
+    - name: Run unit tests with coverage
+      run: npm run test:coverage
+    
+    - name: Generate test report
+      run: npm run test:report
+      continue-on-error: true
+    
+    - name: Backend SonarQube Analysis Status
+      run: |
+        echo "📊 Backend Analysis Summary:"
+        echo "✅ TypeScript Compilation: PASSED"
+        echo "✅ ESLint Analysis: COMPLETED"
+        echo "✅ Unit Tests: PASSED"
+        echo "✅ Coverage Reports: GENERATED"
+        echo ""
+        echo "⏳ SonarQube Analysis: Pending SonarCloud setup"
+        echo "To enable: Add SONAR_TOKEN to repository secrets"
+        echo ""
+        echo "🎯 Backend CI/CD: All core checks passing!"
+      continue-on-error: true
+    
+    - name: Archive test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: backend-test-results
+        path: |
+          backend/coverage/
+          backend/test-results/
