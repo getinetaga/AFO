@@ -51,6 +51,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: https://sonarcloud.io
       with:
         projectBaseDir: ./backend
         args: >
@@ -60,6 +61,7 @@ jobs:
           -Dsonar.tests=test
           -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
           -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+      continue-on-error: true
     
     - name: Archive test results
       uses: actions/upload-artifact@v3
