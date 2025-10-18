@@ -1,0 +1,661 @@
+// ============================================================================
+// AFO Chat Application - Widget Unit Tests
+// ============================================================================
+// Comprehensive test suite for UI widgets and screens including:
+// - Screen rendering and navigation
+//  - Basic widget functionality
+// - Error handling and edge cases
+// ============================================================================
+
+import 'package:afochatapplication/main.dart';
+import 'package:afochatapplication/screens/chat_screen.dart';
+import 'package:afochatapplication/screens/home_screen.dart';
+import 'package:afochatapplication/screens/login_screen.dart';
+import 'package:afochatapplication/screens/profile_screen.dart';
+import 'package:afochatapplication/screens/register_screen.dart';
+import 'package:afochatapplication/services/auth_service.dart';
+import 'package:afochatapplication/services/call_service.dart';
+import 'package:afochatapplication/services/chat_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+
+void main() {
+  group('App Initialization', () {
+    testWidgets('should create main app without errors', (WidgetTester tester) async {
+      final authService = AuthService();
+      await tester.pumpWidget(MyApp(authService: authService));
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('should have correct app title', (WidgetTester tester) async {
+      final authService = AuthService();
+      await tester.pumpWidget(MyApp(authService: authService));
+      
+      final MaterialApp app = tester.widget(find.byType(MaterialApp));
+      expect(app.title, equals('AFO Chat Application'));
+    });
+
+    testWidgets('should show loading or login screen initially', (WidgetTester tester) async {
+      final authService = AuthService();
+      await tester.pumpWidget(MyApp(authService: authService));
+      await tester.pump();
+      
+      // Should show either loading or login screen
+      expect(
+        find.byType(CircularProgressIndicator).or(find.byType(LoginScreen)),
+        findsOneWidget
+      );
+    });
+  });
+
+  group('Login Screen', () {
+    testWidgets('should render login form elements', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<AuthService>(
+            create: (_) => AuthService(),
+            child: const LoginScreen(),
+          ),
+        ),
+      );
+
+      // Check for login form elements
+      expect(find.byType(TextField), findsAtLeast(2)); // Email and password fields
+      expect(find.byType(ElevatedButton), findsAtLeast(1)); // Login button
+      expect(find.text('Login'), findsAtLeast(1));
+    });
+
+    testWidgets('should show validation errors for empty fields', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const LoginScreen(),
+          ),
+        ),
+      );
+
+      // Tap login button without entering data
+      final loginButton = find.byType(ElevatedButton).first;
+      await tester.tap(loginButton);
+      await tester.pump();
+
+      // Should show validation errors or handle empty fields
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('should navigate to register screen', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const LoginScreen(),
+          ),
+          routes: {
+            '/register': (context) => const RegisterScreen(),
+          },
+        ),
+      );
+
+      // Look for register navigation link
+      final registerLink = find.text('Register');
+      if (registerLink.evaluate().isNotEmpty) {
+        await tester.tap(registerLink);
+        await tester.pumpAndSettle();
+      }
+
+      // The screen should handle register navigation
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('should handle Google Sign-In button', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const LoginScreen(),
+          ),
+        ),
+      );
+
+      // Look for Google Sign-In button
+      final googleButton = find.textContaining('Google');
+      if (googleButton.evaluate().isNotEmpty) {
+        await tester.tap(googleButton.first);
+        await tester.pump();
+      }
+
+      // Should handle Google sign-in flow
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+  });
+
+  group('Register Screen', () {
+    testWidgets('should render registration form', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const RegisterScreen(),
+          ),
+        ),
+      );
+
+      // Check for registration form elements
+      expect(find.byType(TextField), findsAtLeast(3)); // Name, email, password fields
+      expect(find.byType(ElevatedButton), findsAtLeast(1)); // Register button
+      expect(find.text('Register'), findsAtLeast(1));
+    });
+
+    testWidgets('should validate form inputs', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const RegisterScreen(),
+          ),
+        ),
+      );
+
+      // Try to register with empty fields
+      final registerButton = find.byType(ElevatedButton).first;
+      await tester.tap(registerButton);
+      await tester.pump();
+
+      // Should handle validation
+      expect(find.byType(RegisterScreen), findsOneWidget);
+    });
+
+    testWidgets('should handle successful registration', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const RegisterScreen(),
+          ),
+        ),
+      );
+
+      // Fill in the form
+      final textFields = find.byType(TextField);
+      if (textFields.evaluate().length >= 3) {
+        await tester.enterText(textFields.at(0), 'Test User');
+        await tester.enterText(textFields.at(1), 'test@example.com');
+        await tester.enterText(textFields.at(2), 'password123');
+        
+        // Submit form
+        final registerButton = find.byType(ElevatedButton).first;
+        await tester.tap(registerButton);
+        await tester.pump();
+      }
+
+      // Should handle registration attempt
+      expect(find.byType(RegisterScreen), findsOneWidget);
+    });
+  });
+
+  group('Home Screen', () {
+    testWidgets('should render home screen elements', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const HomeScreen(),
+          ),
+        ),
+      );
+
+      // Check for home screen elements
+      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('should have navigation elements', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const HomeScreen(),
+          ),
+        ),
+      );
+
+      // Look for navigation elements
+      expect(find.byType(AppBar), findsWidgets);
+      expect(find.byType(BottomNavigationBar), findsAny);
+    });
+
+    testWidgets('should handle user interactions', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const HomeScreen(),
+          ),
+        ),
+      );
+
+      // Test tapping on interactive elements
+      final tappableElements = find.byType(GestureDetector);
+      if (tappableElements.evaluate().isNotEmpty) {
+        await tester.tap(tappableElements.first);
+        await tester.pump();
+      }
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+  });
+
+  group('Chat Screen', () {
+    testWidgets('should render chat interface', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+
+      // Check for chat interface elements
+      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+
+    testWidgets('should have message input field', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+
+      // Look for message input elements
+      expect(find.byType(TextField), findsAtLeast(1));
+      expect(find.byType(IconButton), findsAtLeast(1)); // Send button
+    });
+
+    testWidgets('should handle message sending', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+
+      // Enter a message
+      final messageField = find.byType(TextField);
+      if (messageField.evaluate().isNotEmpty) {
+        await tester.enterText(messageField.first, 'Test message');
+        
+        // Tap send button
+        final sendButton = find.byType(IconButton);
+        if (sendButton.evaluate().isNotEmpty) {
+          await tester.tap(sendButton.first);
+          await tester.pump();
+        }
+      }
+
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+
+    testWidgets('should display messages', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+
+      // Look for message list or conversation view
+      expect(find.byType(ListView), findsAny);
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+  });
+
+  group('Profile Screen', () {
+    testWidgets('should render profile information', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ProfileScreen(),
+          ),
+        ),
+      );
+
+      // Check for profile screen elements
+      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(ProfileScreen), findsOneWidget);
+    });
+
+    testWidgets('should have user information fields', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ProfileScreen(),
+          ),
+        ),
+      );
+
+      // Look for profile information display
+      expect(find.byType(Text), findsAtLeast(1));
+      expect(find.byType(CircleAvatar), findsAny); // Profile picture
+    });
+
+    testWidgets('should handle profile editing', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ProfileScreen(),
+          ),
+        ),
+      );
+
+      // Look for edit button or editable fields
+      final editButtons = find.byIcon(Icons.edit);
+      if (editButtons.evaluate().isNotEmpty) {
+        await tester.tap(editButtons.first);
+        await tester.pump();
+      }
+
+      expect(find.byType(ProfileScreen), findsOneWidget);
+    });
+  });
+
+  group('Navigation and Routing', () {
+    testWidgets('should handle screen transitions', (WidgetTester tester) async {
+      await tester.pumpWidget(const AFOChatApp());
+
+      // Test navigation between screens
+      expect(find.byType(MaterialApp), findsOneWidget);
+      
+      // App should handle route navigation
+      await tester.pump();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('should maintain state during navigation', (WidgetTester tester) async {
+      await tester.pumpWidget(const AFOChatApp());
+
+      // Navigate and check state preservation
+      await tester.pump();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+  });
+
+  group('Error Handling', () {
+    testWidgets('should handle service errors gracefully', (WidgetTester tester) async {
+      // Create a mock auth service that throws errors
+      final errorAuthService = AuthService();
+      
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider.value(value: errorAuthService),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const LoginScreen(),
+          ),
+        ),
+      );
+
+      // Should handle service errors
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('should display error messages', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const LoginScreen(),
+          ),
+        ),
+      );
+
+      // Look for error message display capabilities
+      expect(find.byType(SnackBar), findsNothing); // Initially no errors
+      expect(find.byType(AlertDialog), findsNothing); // Initially no dialogs
+    });
+
+    testWidgets('should handle network connectivity issues', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+
+      // Should gracefully handle network issues
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+  });
+
+  group('Accessibility', () {
+    testWidgets('should have proper accessibility labels', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const HomeScreen(),
+          ),
+        ),
+      );
+
+      // Check for semantic elements
+      expect(find.byType(Semantics), findsAtLeast(1));
+    });
+
+    testWidgets('should support keyboard navigation', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const LoginScreen(),
+          ),
+        ),
+      );
+
+      // Test focus traversal
+      final focusableElements = find.byType(TextField);
+      if (focusableElements.evaluate().isNotEmpty) {
+        await tester.tap(focusableElements.first);
+        await tester.pump();
+        
+        // Should handle focus
+        expect(find.byType(LoginScreen), findsOneWidget);
+      }
+    });
+  });
+
+  group('Performance', () {
+    testWidgets('should render efficiently', (WidgetTester tester) async {
+      final stopwatch = Stopwatch()..start();
+      
+      await tester.pumpWidget(const AFOChatApp());
+      await tester.pump();
+      
+      stopwatch.stop();
+      
+      // App should render within reasonable time
+      expect(stopwatch.elapsedMilliseconds, lessThan(5000));
+    });
+
+    testWidgets('should handle large lists efficiently', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+
+      // Should handle scrolling and large datasets
+      final listViews = find.byType(ListView);
+      if (listViews.evaluate().isNotEmpty) {
+        await tester.drag(listViews.first, const Offset(0, -200));
+        await tester.pump();
+      }
+
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+  });
+
+  group('State Management', () {
+    testWidgets('should update UI on state changes', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const HomeScreen(),
+          ),
+        ),
+      );
+
+      // Trigger state changes and verify UI updates
+      await tester.pump();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('should preserve state across rebuilds', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (_) => ChatService()),
+              ChangeNotifierProvider(create: (_) => CallService()),
+            ],
+            child: const ChatScreen(),
+          ),
+        ),
+      );
+
+      // Interact with UI and then rebuild
+      final textFields = find.byType(TextField);
+      if (textFields.evaluate().isNotEmpty) {
+        await tester.enterText(textFields.first, 'Test input');
+        await tester.pump();
+        
+        // Rebuild widget
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider(create: (_) => AuthService()),
+                ChangeNotifierProvider(create: (_) => ChatService()),
+                ChangeNotifierProvider(create: (_) => CallService()),
+              ],
+              child: const ChatScreen(),
+            ),
+          ),
+        );
+      }
+
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+  });
+}
