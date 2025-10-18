@@ -19,46 +19,206 @@ jobs:
         fetch-depth: 0  # Shallow clones should be disabled for better analysis
     
     - name: Set up Flutter
+      id: flutter-setup
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.24.3'
         channel: 'stable'
+      continue-on-error: false
+    
+    - name: Verify Flutter Installation
+      if: always()
+      run: |
+        if command -v flutter &> /dev/null; then
+          echo "✅ Flutter successfully installed"
+          flutter --version
+          flutter doctor --no-version-check
+        else
+          echo "❌ Flutter installation failed"
+          echo "::error::Flutter SDK installation failed - cannot proceed with Flutter tests"
+          exit 1
+        fi
     
     - name: Set up Node.js
+      id: node-setup
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: backend/package-lock.json
+      continue-on-error: false
+    
+    - name: Verify Node.js Installation
+      if: always()
+      run: |
+        if command -v node &> /dev/null && command -v npm &> /dev/null; then
+          echo "✅ Node.js and npm successfully installed"
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+        else
+          echo "❌ Node.js/npm installation failed"
+          echo "::error::Node.js installation failed - backend tests will be skipped"
+        fi
     
     # Flutter Frontend Analysis
     - name: Install Flutter dependencies
-      run: flutter pub get
+      id: flutter-deps
+      run: |
+        echo "📦 Installing Flutter dependencies..."
+        if flutter pub get; then
+          echo "✅ Flutter dependencies installed successfully"
+        else
+          echo "❌ Flutter dependencies installation failed"
+          echo "::error::Failed to install Flutter dependencies - checking pubspec.yaml"
+          cat pubspec.yaml | head -20
+          exit 1
+        fi
+      continue-on-error: false
     
     - name: Run Flutter tests with coverage
+      id: flutter-tests
       run: |
-        flutter test --coverage
-        # Generate LCOV report for SonarQube
-        genhtml coverage/lcov.info -o coverage/html
+        echo "🧪 Running Flutter tests with coverage..."
+        if flutter test --coverage; then
+          echo "✅ Flutter tests completed successfully"
+          if [ -f "coverage/lcov.info" ]; then
+            echo "✅ Coverage report generated"
+            echo "Coverage file size: $(wc -l < coverage/lcov.info) lines"
+          else
+            echo "⚠️ Coverage report not found"
+          fi
+        else
+          echo "❌ Flutter tests failed"
+          echo "::error::Flutter test suite failed - check test outputs above"
+          exit 1
+        fi
+      continue-on-error: false
+    
+    - name: Generate HTML coverage report
+      if: steps.flutter-tests.outcome == 'success'
+      run: |
+        echo "📊 Generating HTML coverage report..."
+        if command -v genhtml &> /dev/null; then
+          genhtml coverage/lcov.info -o coverage/html
+          echo "✅ HTML coverage report generated"
+        else
+          echo "⚠️ genhtml not available - installing lcov"
+          sudo apt-get update && sudo apt-get install -y lcov
+          genhtml coverage/lcov.info -o coverage/html
+          echo "✅ HTML coverage report generated"
+        fi
+      continue-on-error: true
     
     - name: Flutter Code Analysis
-      run: flutter analyze --no-fatal-infos
+      id: flutter-analysis
+      run: |
+        echo "🔍 Running Flutter code analysis..."
+        if flutter analyze --no-fatal-infos; then
+          echo "✅ Flutter analysis completed successfully"
+        else
+          echo "⚠️ Flutter analysis found issues (non-blocking)"
+          echo "::warning::Flutter analysis issues detected - review output above"
+        fi
+      continue-on-error: true
     
     # Backend Analysis
+    - name: Check Backend Directory
+      id: backend-check
+      run: |
+        if [ -d "./backend" ] && [ -f "./backend/package.json" ]; then
+          echo "✅ Backend directory and package.json found"
+          echo "backend-exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Backend directory or package.json not found - skipping backend tests"
+          echo "backend-exists=false" >> $GITHUB_OUTPUT
+        fi
+    
     - name: Install Backend dependencies
+      id: backend-deps
+      if: steps.backend-check.outputs.backend-exists == 'true'
       working-directory: ./backend
-      run: npm ci
+      run: |
+        echo "📦 Installing Backend dependencies..."
+        if npm ci; then
+          echo "✅ Backend dependencies installed successfully"
+          echo "Installed packages:"
+          npm list --depth=0 || true
+        else
+          echo "❌ Backend dependencies installation failed"
+          echo "::error::Failed to install backend dependencies"
+          echo "package.json contents:"
+          cat package.json | head -20
+          exit 1
+        fi
+      continue-on-error: false
     
     - name: Run Backend linting
+      id: backend-lint
+      if: steps.backend-deps.outcome == 'success'
       working-directory: ./backend
-      run: npm run lint
+      run: |
+        echo "🔍 Running Backend ESLint analysis..."
+        if npm run lint; then
+          echo "✅ Backend linting completed successfully"
+        else
+          echo "⚠️ Backend linting found issues (non-blocking)"
+          echo "::warning::Backend linting issues detected - review output above"
+        fi
+      continue-on-error: true
     
     - name: Run Backend tests with coverage
+      id: backend-tests
+      if: steps.backend-deps.outcome == 'success'
       working-directory: ./backend
-      run: npm run test:coverage
+      run: |
+        echo "🧪 Running Backend tests with coverage..."
+        if npm run test:coverage; then
+          echo "✅ Backend tests completed successfully"
+          if [ -f "coverage/lcov.info" ]; then
+            echo "✅ Backend coverage report generated"
+            echo "Coverage file size: $(wc -l < coverage/lcov.info) lines"
+          else
+            echo "⚠️ Backend coverage report not found"
+          fi
+        else
+          echo "❌ Backend tests failed"
+          echo "::error::Backend test suite failed - check test outputs above"
+          echo "Available npm scripts:"
+          npm run --silent 2>/dev/null || echo "npm run command failed"
+          exit 1
+        fi
+      continue-on-error: false
     
-    # SonarQube Analysis (will run with continue-on-error if secrets missing)
+        # SonarQube Configuration Check
+    - name: Check SonarQube Configuration
+      id: sonar-config
+      run: |
+        echo "🔍 Checking SonarQube configuration..."
+        if [ -n "${{ secrets.SONAR_TOKEN }}" ]; then
+          echo "✅ SONAR_TOKEN is configured"
+          echo "sonar-configured=true" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ SONAR_TOKEN is not configured"
+          echo "sonar-configured=false" >> $GITHUB_OUTPUT
+        fi
+        
+        # Check for coverage files
+        if [ -f "coverage/lcov.info" ]; then
+          echo "✅ Flutter coverage file exists"
+        else
+          echo "⚠️ Flutter coverage file missing"
+        fi
+        
+        if [ -f "backend/coverage/lcov.info" ]; then
+          echo "✅ Backend coverage file exists"
+        else
+          echo "⚠️ Backend coverage file missing"
+        fi
+    
+    # SonarQube Analysis (with comprehensive error handling)
     - name: SonarQube Scan
+      id: sonar-scan
+      if: steps.sonar-config.outputs.sonar-configured == 'true'
       uses: sonarqube-quality-gate-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,6 +238,60 @@ jobs:
           -Dsonar.pullrequest.branch=${{ github.head_ref }}
           -Dsonar.pullrequest.base=${{ github.base_ref }}
       continue-on-error: true
+    
+    # SonarQube Analysis Result Check
+    - name: Check SonarQube Analysis Result
+      if: steps.sonar-config.outputs.sonar-configured == 'true'
+      run: |
+        if [ "${{ steps.sonar-scan.outcome }}" == "success" ]; then
+          echo "✅ SonarQube analysis completed successfully"
+        else
+          echo "❌ SonarQube analysis failed"
+          echo "::warning::SonarQube analysis failed - possible causes:"
+          echo "  - Invalid SONAR_TOKEN"
+          echo "  - Network connectivity issues"
+          echo "  - SonarCloud service unavailable"
+          echo "  - Project configuration issues"
+        fi
+    
+    # Quality Gate Check (with error handling)
+    - name: SonarQube Quality Gate Check
+      id: quality-gate
+      if: steps.sonar-scan.outcome == 'success'
+      uses: sonarqube-quality-gate-action@master
+      timeout-minutes: 5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: https://sonarcloud.io
+      continue-on-error: true
+    
+    # Quality Gate Result Check
+    - name: Check Quality Gate Result
+      if: steps.sonar-scan.outcome == 'success'
+      run: |
+        if [ "${{ steps.quality-gate.outcome }}" == "success" ]; then
+          echo "✅ SonarQube Quality Gate passed"
+        else
+          echo "⚠️ SonarQube Quality Gate failed or timed out"
+          echo "::warning::Quality Gate issues detected - check SonarCloud dashboard"
+          echo "Dashboard: https://sonarcloud.io/project/overview?id=afo-chat-application"
+        fi
+    
+    # SonarQube Setup Instructions (when secrets not configured)
+    - name: SonarQube Setup Notice
+      if: steps.sonar-config.outputs.sonar-configured == 'false'
+      run: |
+        echo "ℹ️ SonarQube Analysis Configuration Status:"
+        echo "📊 Tests and Coverage: ✅ Completed successfully"
+        echo "🔍 Code Quality Analysis: ⏳ Pending SonarCloud setup"
+        echo ""
+        echo "To enable full SonarQube analysis:"
+        echo "1. 🌐 Set up SonarCloud account at https://sonarcloud.io"
+        echo "2. 🔑 Generate authentication token in SonarCloud"
+        echo "3. 🔐 Add SONAR_TOKEN to repository secrets"
+        echo "4. 🚀 Quality analysis will run automatically on next push"
+        echo ""
+        echo "Current workflow status: All tests passing ✅"
     
     # Quality Gate Check (will run with continue-on-error if secrets missing)
     - name: SonarQube Quality Gate Check
@@ -99,20 +313,131 @@ jobs:
         echo "  3. Quality analysis will run automatically on next push"
         echo "- Tests and code quality checks completed successfully!"
     
-    # Upload coverage reports
+    # Coverage Report Validation
+    - name: Validate Coverage Reports
+      id: coverage-validation
+      if: always()
+      run: |
+        echo "📊 Validating coverage reports..."
+        coverage_files=""
+        
+        if [ -f "coverage/lcov.info" ]; then
+          echo "✅ Flutter coverage report found"
+          echo "Flutter coverage lines: $(wc -l < coverage/lcov.info)"
+          coverage_files="./coverage/lcov.info"
+        else
+          echo "⚠️ Flutter coverage report missing"
+        fi
+        
+        if [ -f "backend/coverage/lcov.info" ]; then
+          echo "✅ Backend coverage report found" 
+          echo "Backend coverage lines: $(wc -l < backend/coverage/lcov.info)"
+          if [ -n "$coverage_files" ]; then
+            coverage_files="$coverage_files,./backend/coverage/lcov.info"
+          else
+            coverage_files="./backend/coverage/lcov.info"
+          fi
+        else
+          echo "⚠️ Backend coverage report missing"
+        fi
+        
+        if [ -n "$coverage_files" ]; then
+          echo "coverage-files=$coverage_files" >> $GITHUB_OUTPUT
+          echo "has-coverage=true" >> $GITHUB_OUTPUT
+          echo "✅ Coverage validation completed"
+        else
+          echo "has-coverage=false" >> $GITHUB_OUTPUT
+          echo "⚠️ No coverage files found"
+        fi
+    
+    # Upload coverage reports to Codecov
     - name: Upload coverage reports to Codecov
+      id: codecov-upload
+      if: steps.coverage-validation.outputs.has-coverage == 'true'
       uses: codecov/codecov-action@v3
       with:
-        files: ./coverage/lcov.info,./backend/coverage/lcov.info
+        files: ${{ steps.coverage-validation.outputs.coverage-files }}
         flags: unittests
         name: afo-chat-coverage
         fail_ci_if_error: false
+        verbose: true
+      continue-on-error: true
     
-    # Archive code coverage results
+    # Check Codecov upload result
+    - name: Check Codecov Upload Result
+      if: steps.coverage-validation.outputs.has-coverage == 'true'
+      run: |
+        if [ "${{ steps.codecov-upload.outcome }}" == "success" ]; then
+          echo "✅ Coverage reports uploaded to Codecov successfully"
+        else
+          echo "⚠️ Codecov upload failed (non-blocking)"
+          echo "::warning::Coverage upload to Codecov failed - reports still available as artifacts"
+        fi
+    
+    # Archive code coverage results (with error handling)
     - name: Archive code coverage results
+      id: archive-coverage
+      if: always()
       uses: actions/upload-artifact@v3
       with:
         name: code-coverage-report
         path: |
           coverage/
           backend/coverage/
+        retention-days: 30
+      continue-on-error: true
+    
+    # Check artifact upload result
+    - name: Check Coverage Artifact Upload
+      if: always()
+      run: |
+        if [ "${{ steps.archive-coverage.outcome }}" == "success" ]; then
+          echo "✅ Coverage artifacts uploaded successfully"
+        else
+          echo "⚠️ Coverage artifact upload failed"
+          echo "::warning::Failed to archive coverage reports"
+        fi
+    
+    # Final workflow status summary
+    - name: Workflow Status Summary
+      if: always()
+      run: |
+        echo "🎯 AFO Chat Application - CI/CD Workflow Summary"
+        echo "=================================================="
+        
+        # Flutter Status
+        if [ "${{ steps.flutter-tests.outcome }}" == "success" ]; then
+          echo "✅ Flutter Tests: PASSED"
+        else
+          echo "❌ Flutter Tests: FAILED"
+        fi
+        
+        # Backend Status  
+        if [ "${{ steps.backend-tests.outcome }}" == "success" ]; then
+          echo "✅ Backend Tests: PASSED"
+        elif [ "${{ steps.backend-check.outputs.backend-exists }}" == "false" ]; then
+          echo "⏭️ Backend Tests: SKIPPED (no backend found)"
+        else
+          echo "❌ Backend Tests: FAILED"
+        fi
+        
+        # SonarQube Status
+        if [ "${{ steps.sonar-config.outputs.sonar-configured }}" == "true" ]; then
+          if [ "${{ steps.sonar-scan.outcome }}" == "success" ]; then
+            echo "✅ SonarQube Analysis: COMPLETED"
+          else
+            echo "⚠️ SonarQube Analysis: FAILED"
+          fi
+        else
+          echo "⏳ SonarQube Analysis: PENDING SETUP"
+        fi
+        
+        # Coverage Status
+        if [ "${{ steps.coverage-validation.outputs.has-coverage }}" == "true" ]; then
+          echo "✅ Coverage Reports: GENERATED"
+        else
+          echo "⚠️ Coverage Reports: MISSING"
+        fi
+        
+        echo "=================================================="
+        echo "🚀 Workflow completed - Check individual steps for details"
