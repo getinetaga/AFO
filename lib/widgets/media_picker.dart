@@ -42,7 +42,9 @@ library;
 
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart' as picker;
 
 import '../services/chat_service.dart';
 
@@ -136,13 +138,20 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
   /// Calls onMediaSelected callback with the selected image file
   Future<void> _pickImage(ImageSource source) async {
     try {
-      // Mock image picker implementation
-      // In production, use image_picker package
-      await Future.delayed(const Duration(milliseconds: 500));
+      final imagePicker = picker.ImagePicker();
+      final pickedFile = await imagePicker.pickImage(
+        source: source == ImageSource.camera 
+            ? picker.ImageSource.camera 
+            : picker.ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+      );
       
-      // For demonstration, create a mock image file
-      final mockImageFile = await _createMockFile('image.jpg', MessageType.image);
-      widget.onMediaSelected(mockImageFile, MessageType.image);
+      if (pickedFile != null) {
+        final file = File(pickedFile.path);
+        widget.onMediaSelected(file, MessageType.image);
+      }
     } catch (e) {
       _showError('Failed to pick image: $e');
     }
@@ -160,12 +169,18 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
   /// Calls onMediaSelected callback with the selected video file
   Future<void> _pickVideo(VideoSource source) async {
     try {
-      // Mock video picker implementation
-      // In production, use image_picker package for videos
-      await Future.delayed(const Duration(milliseconds: 500));
+      final imagePicker = picker.ImagePicker();
+      final pickedFile = await imagePicker.pickVideo(
+        source: source == VideoSource.camera 
+            ? picker.ImageSource.camera 
+            : picker.ImageSource.gallery,
+        maxDuration: const Duration(minutes: 5),
+      );
       
-      final mockVideoFile = await _createMockFile('video.mp4', MessageType.video);
-      widget.onMediaSelected(mockVideoFile, MessageType.video);
+      if (pickedFile != null) {
+        final file = File(pickedFile.path);
+        widget.onMediaSelected(file, MessageType.video);
+      }
     } catch (e) {
       _showError('Failed to pick video: $e');
     }
@@ -182,12 +197,15 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
   /// Calls onMediaSelected callback with the selected document file
   Future<void> _pickDocument() async {
     try {
-      // Mock document picker implementation
-      // In production, use file_picker package
-      await Future.delayed(const Duration(milliseconds: 500));
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'rtf', 'xls', 'xlsx', 'ppt', 'pptx'],
+      );
       
-      final mockDocFile = await _createMockFile('document.pdf', MessageType.document);
-      widget.onMediaSelected(mockDocFile, MessageType.document);
+      if (result != null && result.files.isNotEmpty) {
+        final file = File(result.files.single.path!);
+        widget.onMediaSelected(file, MessageType.document);
+      }
     } catch (e) {
       _showError('Failed to pick document: $e');
     }
@@ -202,12 +220,15 @@ class _MediaPickerWidgetState extends State<MediaPickerWidget>
   /// Calls onMediaSelected callback with the selected audio file
   Future<void> _pickAudio() async {
     try {
-      // Mock audio picker implementation
-      // In production, use file_picker package
-      await Future.delayed(const Duration(milliseconds: 500));
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['mp3', 'wav', 'aac', 'm4a', 'ogg', 'opus'],
+      );
       
-      final mockAudioFile = await _createMockFile('audio.mp3', MessageType.audio);
-      widget.onMediaSelected(mockAudioFile, MessageType.audio);
+      if (result != null && result.files.isNotEmpty) {
+        final file = File(result.files.single.path!);
+        widget.onMediaSelected(file, MessageType.audio);
+      }
     } catch (e) {
       _showError('Failed to pick audio: $e');
     }
